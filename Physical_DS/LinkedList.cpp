@@ -189,6 +189,24 @@ class LinkedList{
         }
 
 
+        void reverse(){
+            if(isEmpty()){
+                cout<<"The linked list is empty. Cannot reverse the list."<<endl;
+                return;
+            }
+            Node* prev = nullptr;
+            Node* current = head;
+            Node* next = nullptr;
+            while(current != nullptr){
+                next = current->next; // Store the next node
+                current->next = prev; // Reverse the current node's pointer
+                prev = current;       // Move prev to the current node
+                current = next;       // Move to the next node
+            }
+            head = prev; // Update head to the new first node
+        }
+
+
 };
 
 
@@ -256,6 +274,12 @@ int main() {
     list.Delete(100); 
     cout << "Final count: " << list.count() << endl;
     list.display();
+
+    // 8. Test Reverse
+    cout << "--- 8. Testing Reverse ---" << endl;
+    list.reverse();
+    list.display();
+    
 
     return 0;
 }
