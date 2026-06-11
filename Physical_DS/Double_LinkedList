@@ -1,0 +1,278 @@
+#include<iostream>
+using namespace std;
+
+template <typename T>
+class Node {
+public:
+    T data;
+    Node* next;
+    Node* prev;
+
+    Node(T data) {
+        this->data = data;
+        this->next = NULL;
+        this->prev = NULL;
+    }
+};
+
+template <typename T>
+class LinkedList {
+private:
+    Node<T>* head;
+    Node<T>* tail;
+    int size;
+    
+public:
+    LinkedList() {
+        this->head = NULL;
+        this->tail = NULL;
+        this->size = 0;
+    }
+
+    bool isEmpty() const {
+        return size == 0;
+    }
+    
+    void insertInStart(T data) {
+        Node<T>* newNode = new Node<T>(data);
+        size++;
+        
+        if (head == NULL) {
+            head = newNode;
+            tail = newNode;
+        }
+        else if (head == tail) {
+            newNode->next = head;
+            head->prev = newNode;
+            tail = head;
+            head = newNode;
+        }
+        else {
+            newNode->next = head;
+            head->prev = newNode;
+            head = newNode;
+        }
+    }
+    
+    void insertAfter(T data, T after) {
+        Node<T>* temp = head;
+        while (temp != NULL && temp->data != after) {
+            temp = temp->next;
+        }
+        if (temp != NULL) {
+            Node<T>* newNode = new Node<T>(data);
+            newNode->next = temp->next;
+            newNode->prev = temp;
+            
+            if (temp->next != NULL) {
+                temp->next->prev = newNode;
+            } else {
+                tail = newNode;  // Update tail if inserting at end
+            }
+            
+            temp->next = newNode;
+            size++;
+        }
+    }
+
+    void insertEnd(T data) {
+        Node<T>* newNode = new Node<T>(data);
+        size++;
+        
+        if (head == NULL) {
+            head = newNode;
+            tail = newNode; 
+        }
+        else {
+            tail->next = newNode;  
+            newNode->prev = tail;
+            tail = newNode;
+        }
+    }
+    
+    void insertAt(T data, int pos) {
+        if (pos < 0 || pos > size) {
+            cout << "Invalid position" << endl;
+            return;
+        }
+        else if (pos == 0) {
+            insertInStart(data);
+        }
+        else if (pos == size) {
+            insertEnd(data);
+        }
+        else {
+            Node<T>* newNode = new Node<T>(data);
+            Node<T>* temp = head;
+            for (int i = 0; i < pos - 1; i++) {
+                temp = temp->next;
+            }
+            newNode->next = temp->next;
+            newNode->prev = temp;
+            temp->next->prev = newNode;
+            temp->next = newNode;
+            size++;
+        }
+    }
+
+    void display() const {
+        Node<T>* temp = head;
+        while (temp != NULL) {
+            cout << temp->data << " ";
+            temp = temp->next;
+        }
+        cout << endl;
+    }
+    
+    
+    void displayReverse() const {
+        Node<T>* temp = tail;
+        while (temp != NULL) {
+            cout << temp->data << " ";
+            temp = temp->prev;
+        }
+        cout << endl;
+    }
+
+    int search(T key) {
+        Node<T>* temp = head;
+        int pos = 0;
+        while (temp != NULL) {
+            if (temp->data == key) {
+                cout << "Found " << key << " at index " << pos << endl;
+                return pos;
+            }
+            temp = temp->next; 
+            pos++;
+        }
+        cout << "Element not found" << endl;
+        return -1;  
+    }
+
+    void deleteInStart() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return;
+        }
+        
+        Node<T>* temp = head;
+        
+        if (head == tail) {
+            head = NULL;
+            tail = NULL;
+        } else {
+            head = head->next;
+            if (head) head->prev = NULL;
+        }
+        
+        delete temp;
+        size--;
+    }
+    
+    void deleteEnd() {
+        if (isEmpty()) {
+            cout << "List is empty" << endl;
+            return;
+        }
+        
+        Node<T>* temp = tail;
+        
+        if (head == tail) {
+            head = NULL;
+            tail = NULL;
+        } else {
+            tail = tail->prev;
+            if (tail) tail->next = NULL;
+        }
+        
+        delete temp;
+        size--;
+    }
+
+    void deleteAt(int pos) {
+        if (pos < 0 || pos >= size) {
+            cout << "Invalid position" << endl;
+            return;
+        }
+        else if (pos == 0) {
+            deleteInStart();
+        }
+        else if (pos == size - 1) {
+            deleteEnd();
+        }
+        else {
+            Node<T>* temp = head;
+            for (int i = 0; i < pos - 1; i++) {
+                temp = temp->next;
+            }
+            
+            Node<T>* temp2 = temp->next;
+            temp->next = temp2->next;
+            if (temp2->next) {
+                temp2->next->prev = temp;
+            }
+            
+            delete temp2;
+            size--;
+        }
+    }
+    
+    void deleteList() {
+        while (head != NULL) {
+            Node<T>* temp = head;
+            head = head->next;
+            delete temp;
+        }
+        head = NULL;
+        tail = NULL;
+        size = 0;
+    }
+    
+    int getSize() const {
+        return size;
+    }
+    
+    ~LinkedList() {
+        deleteList();
+    }
+};
+
+int main() {
+    LinkedList<int> list;
+    
+    // Test your doubly linked list
+    cout << "Testing Insertions:" << endl;
+    list.insertEnd(10);
+    list.insertEnd(20);
+    list.insertEnd(30);
+    list.insertInStart(5);
+    list.insertAt(15, 2);
+    list.insertAfter(25, 20);
+    
+    cout << "Forward: ";
+    list.display();
+    
+    cout << "Reverse: ";
+    list.displayReverse();
+    
+    cout << "\nTesting Search:" << endl;
+    list.search(20);
+    list.search(100);
+    
+    cout << "\nTesting Deletions:" << endl;
+    list.deleteInStart();
+    cout << "After deleteInStart: ";
+    list.display();
+    
+    list.deleteEnd();
+    cout << "After deleteEnd: ";
+    list.display();
+    
+    list.deleteAt(1);
+    cout << "After deleteAt(1): ";
+    list.display();
+    
+    cout << "\nFinal size: " << list.getSize() << endl;
+    
+    return 0;
+}
