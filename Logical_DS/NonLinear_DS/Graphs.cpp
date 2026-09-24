@@ -2,227 +2,476 @@
 #include <vector>
 #include <queue>
 #include <climits>
-#include <algorithm>
+#include <functional>
 
 using namespace std;
 
-// Structure representing an edge to a destination node with an associated weight
-struct Edge {
-    int dest;
+/**
+ * ============================================================================
+ *                         GRAPH - LEARNING GUIDE
+ * ============================================================================
+ *
+ * A Graph consists of:
+ *
+ *   - Vertices (Nodes)
+ *   - Edges (Connections)
+ *
+ * This implementation uses an ADJACENCY LIST.
+ *
+ * Example:
+ *
+ *       0 -------- 1
+ *       |        / |
+ *       |      /   |
+ *       2 ----     3
+ *
+ * Adjacency List:
+ *
+ *       0 -> 1, 2
+ *       1 -> 0, 2, 3
+ *       2 -> 0, 1
+ *       3 -> 1
+ *
+ * For an undirected graph:
+ *
+ *       addEdge(0, 1)
+ *
+ * stores:
+ *
+ *       0 -> 1
+ *       1 -> 0
+ *
+ * Algorithms included:
+ *
+ *   1. BFS
+ *      Uses a Queue and explores level by level.
+ *
+ *   2. DFS
+ *      Goes as deep as possible before backtracking.
+ *
+ *   3. Dijkstra
+ *      Finds the shortest distance from one source
+ *      to all reachable vertices.
+ *
+ * Dijkstra requires NON-NEGATIVE edge weights.
+ *
+ * Time Complexity:
+ *   BFS                    : O(V + E)
+ *   DFS                    : O(V + E)
+ *   Dijkstra (Min Heap)    : O((V + E) log V)
+ *
+ * Space Complexity: O(V + E)
+ *
+ * V = number of vertices
+ * E = number of edges
+ *
+ * ============================================================================
+ */
+
+ // =========================== EDGE STRUCTURE ===========================
+
+ /**
+  * Represents one edge in the adjacency list.
+  *
+  * Example:
+  *
+  *       { destination = 3, weight = 5 }
+  *
+  * means:
+  *
+  *       current vertex ----5----> vertex 3
+  */
+struct Edge
+{
+    int destination;
     int weight;
 };
 
-class Graph {
-private:
-    int numVertices;
-    // Adjacency List representation: A vector of vectors containing Edges
-    vector<vector<Edge>> adjList;
-    bool isDirected;
+// =========================== GRAPH CLASS ===========================
 
-    // Recursive helper function used by the Depth First Search traversal
-    void DFSHelper(int vertex, vector<bool>& visited) {
+class Graph
+{
+private:
+    int numberOfVertices;
+    bool directed;
+
+    /*
+     * Adjacency List
+     *
+     * adjList[0] -> all edges connected to vertex 0
+     * adjList[1] -> all edges connected to vertex 1
+     * ...
+     */
+    vector<vector<Edge>> adjList;
+
+    // ==================== DFS HELPER ====================
+
+    /**
+     * DFS recursively explores one path as deeply as possible.
+     */
+    void DFSHelper(int vertex, vector<bool>& visited) const
+    {
         visited[vertex] = true;
+
         cout << vertex << " ";
 
-        // Traverse all adjacent nodes linked to this vertex
-        for (const auto& edge : adjList[vertex]) {
-            if (!visited[edge.dest]) {
-                DFSHelper(edge.dest, visited);
+        // Visit every unvisited neighbor.
+        for (const Edge& edge : adjList[vertex])
+        {
+            if (!visited[edge.destination])
+            {
+                DFSHelper(edge.destination, visited);
             }
         }
     }
 
 public:
-    // Constructor matching parameters from the lecture
-    Graph(int vertices, bool directed = false) {
-        this->numVertices = vertices;
-        this->isDirected = directed;
+
+    // ==================== CONSTRUCTOR ====================
+
+    /**
+     * Creates a graph with the given number of vertices.
+     *
+     * directed = false -> undirected graph
+     * directed = true  -> directed graph
+     */
+    Graph(int vertices, bool directedGraph = false)
+    {
+        numberOfVertices = vertices;
+        directed = directedGraph;
+
         adjList.resize(vertices);
     }
 
-    // Adds an edge connection to the graph architecture (Handles both weighted and unweighted)
-    void addEdge(int src, int dest, int weight = 1) {
-        Edge edge1 = {dest, weight};
-        adjList[src].push_back(edge1);
+    // ==================== ADD EDGE ====================
 
-        // If the graph is undirected, map the return link from destination to source
-        if (!isDirected) {
-            Edge edge2 = {src, weight};
-            adjList[dest].push_back(edge2);
+    /**
+     * ADD EDGE
+     *
+     * Adds a connection from source to destination.
+     *
+     * For an undirected graph:
+     *
+     *       source <------> destination
+     *
+     * So we store BOTH directions.
+     */
+    void addEdge(int source, int destination, int weight = 1)
+    {
+        adjList[source].push_back({ destination, weight });
+
+        if (!directed)
+        {
+            adjList[destination].push_back({ source, weight });
         }
     }
 
-    // 1. Breadth-First Search (BFS) Traversal Implementation
-    // References Slide Parameters: Uses a Queue to traverse layer-by-layer uniformly
-    void BFS(int startVertex) {
-        vector<bool> visited(numVertices, false);
+    // ==================== BFS ====================
+
+    /**
+     * BFS - BREADTH FIRST SEARCH
+     *
+     * BFS explores the graph level by level.
+     *
+     * Visualization:
+     *
+     *                 0
+     *               /   \
+     *              1     2      <- Level 1
+     *             / \
+     *            3   4          <- Level 2
+     *
+     * Starting from 0:
+     *
+     *       0 -> 1 -> 2 -> 3 -> 4
+     *
+     * A QUEUE is used:
+     *
+     *       First discovered -> First processed
+     *
+     * Time Complexity: O(V + E)
+     */
+    void BFS(int start) const
+    {
+        if (start < 0 || start >= numberOfVertices)
+            return;
+
+        vector<bool> visited(numberOfVertices, false);
+
         queue<int> q;
 
-        visited[startVertex] = true;
-        q.push(startVertex);
+        // Start with the source vertex.
+        visited[start] = true;
+        q.push(start);
 
-        cout << "BFS Traversal starting from vertex " << startVertex << ": ";
-
-        while (!q.empty()) {
+        while (!q.empty())
+        {
             int current = q.front();
             q.pop();
+
             cout << current << " ";
 
-            // Explore neighbors of the current unqueued vertex
-            for (const auto& edge : adjList[current]) {
-                if (!visited[edge.dest]) {
-                    visited[edge.dest] = true;
-                    q.push(edge.dest);
+            /*
+             * Add unvisited neighbors to the queue.
+             *
+             * Mark them visited when adding them,
+             * so the same vertex is not added multiple times.
+             */
+            for (const Edge& edge : adjList[current])
+            {
+                if (!visited[edge.destination])
+                {
+                    visited[edge.destination] = true;
+                    q.push(edge.destination);
                 }
             }
         }
+
         cout << endl;
     }
 
-    // 2. Depth-First Search (DFS) Traversal Implementation
-    // References Slide Parameters: Uses a stack paradigm via recursion to dive deep along paths
-    void DFS(int startVertex) {
-        vector<bool> visited(numVertices, false);
-        cout << "DFS Traversal starting from vertex " << startVertex << ": ";
-        DFSHelper(startVertex, visited);
+    // ==================== DFS ====================
+
+    /**
+     * DFS - DEPTH FIRST SEARCH
+     *
+     * DFS follows one path as far as possible,
+     * then goes back and tries another path.
+     *
+     * Visualization:
+     *
+     *       0
+     *      / \
+     *     1   2
+     *    /
+     *   3
+     *
+     * DFS may go:
+     *
+     *       0 -> 1 -> 3 -> 2
+     *
+     * Recursion acts like a Stack.
+     *
+     * Time Complexity: O(V + E)
+     */
+    void DFS(int start) const
+    {
+        if (start < 0 || start >= numberOfVertices)
+            return;
+
+        vector<bool> visited(numberOfVertices, false);
+
+        DFSHelper(start, visited);
+
         cout << endl;
     }
 
-    // 3. Dijkstra's Single-Source Shortest Path Algorithm
-    // References Slide Parameters: Evaluates short edge weights iteratively to build minimum pathways
-    void dijkstra(int source) {
-        // Distance lookup table initialized to INT_MAX (infinity)
-        vector<int> dist(numVertices, INT_MAX);
-        // Track completed nodes whose minimum path is permanently solved
-        vector<bool> shortPathSet(numVertices, false);
+    // ==================== DIJKSTRA ====================
 
-        // Distance from source to itself is naturally zero
-        dist[source] = 0;
+    /**
+     * DIJKSTRA'S ALGORITHM
+     *
+     * Finds the shortest distance from one source
+     * to every reachable vertex.
+     *
+     * Example:
+     *
+     *       0 --4-- 1 --2-- 3
+     *        \
+     *         3
+     *          \
+     *           2
+     *
+     * From 0 to 3:
+     *
+     *       0 -> 1 -> 3
+     *       cost = 4 + 2 = 6
+     *
+     *       0 -> 2 -> 3
+     *       may be cheaper depending on the weights.
+     *
+     * Main idea:
+     *
+     *   Always process the vertex with the smallest
+     *   currently known distance.
+     *
+     * Then try to improve the distances of its neighbors.
+     *
+     * This improvement is called RELAXATION.
+     *
+     * IMPORTANT:
+     *   Dijkstra does not work correctly with negative edge weights.
+     *
+     * Time Complexity: O((V + E) log V)
+     */
+    void dijkstra(int source) const
+    {
+        if (source < 0 || source >= numberOfVertices)
+            return;
 
-        // Custom comparator structural lambda lambda for the min-priority queue tracking paths
-        auto cmp = [](pair<int, int> left, pair<int, int> right) { return left.second > right.second; };
-        priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(cmp)> minHeap(cmp);
+        vector<int> distance(
+            numberOfVertices,
+            INT_MAX
+        );
 
-        // Pair item format: {vertex_id, distance_weight}
-        minHeap.push({source, 0});
+        /*
+         * Min-Heap:
+         *
+         *       {distance, vertex}
+         *
+         * The smallest distance is always on top.
+         */
+        priority_queue<
+            pair<int, int>,
+            vector<pair<int, int>>,
+            greater<pair<int, int>>
+        > minHeap;
 
-        while (!minHeap.empty()) {
-            int u = minHeap.top().first;
+        distance[source] = 0;
+
+        minHeap.push({ 0, source });
+
+        while (!minHeap.empty())
+        {
+            int currentDistance = minHeap.top().first;
+            int currentVertex = minHeap.top().second;
+
             minHeap.pop();
 
-            // Ignore reprocessing if vertex is already part of the optimized shortest path set
-            if (shortPathSet[u]) continue;
-            shortPathSet[u] = true;
+            /*
+             * The heap may contain an old entry for the same vertex.
+             * Ignore it if it is no longer the best known distance.
+             */
+            if (currentDistance != distance[currentVertex])
+                continue;
 
-            // Relaxation sequence step for all neighboring links
-            for (const auto& edge : adjList[u]) {
-                int v = edge.dest;
-                int weight = edge.weight;
+            // Try to improve every neighbor's distance.
+            for (const Edge& edge : adjList[currentVertex])
+            {
+                int nextVertex = edge.destination;
+                int newDistance =
+                    currentDistance + edge.weight;
 
-                // Dynamic updates if a shorter traversal route to node 'v' is discovered through node 'u'
-                if (!shortPathSet[v] && dist[u] != INT_MAX && dist[u] + weight < dist[v]) {
-                    dist[v] = dist[u] + weight;
-                    minHeap.push({v, dist[v]});
+                /*
+                 * Relaxation:
+                 *
+                 * If:
+                 *
+                 *       current path + edge < old path
+                 *
+                 * then update the shortest known distance.
+                 */
+                if (newDistance < distance[nextVertex])
+                {
+                    distance[nextVertex] = newDistance;
+
+                    minHeap.push(
+                        { newDistance, nextVertex }
+                    );
                 }
             }
         }
 
-        // Output short path matrices matching standard lecture trace patterns
-        cout << "\nDijkstra's Single-Source Shortest Paths from Vertex [" << source << "]:\n";
-        cout << "---------------------------------------------\n";
-        cout << "Destination Vertex \t Distance From Source\n";
-        cout << "---------------------------------------------\n";
-        for (int i = 0; i < numVertices; ++i) {
-            cout << "\t" << i << " \t\t\t ";
-            if (dist[i] == INT_MAX) {
-                cout << "INF (Unreachable)\n";
-            } else {
-                cout << dist[i] << "\n";
-            }
+        // Print final shortest distances.
+        cout << "Shortest distances from vertex "
+            << source << ":\n";
+
+        for (int i = 0; i < numberOfVertices; i++)
+        {
+            cout << "Vertex " << i << ": ";
+
+            if (distance[i] == INT_MAX)
+                cout << "INF";
+            else
+                cout << distance[i];
+
+            cout << endl;
         }
-        cout << "---------------------------------------------\n";
     }
 
-    // Helper diagnostic display to inspect the structural adjacency arrays directly
-    void printGraph() {
-        cout << "\nAdjacency List Mapping of Graph Structure:\n";
-        for (int i = 0; i < numVertices; ++i) {
-            cout << "Vertex " << i << " links to: ";
-            for (const auto& edge : adjList[i]) {
-                cout << "-> " << edge.dest << " (w:" << edge.weight << ") ";
+    // ==================== DISPLAY GRAPH ====================
+
+    /**
+     * Prints the adjacency list.
+     *
+     * Example:
+     *
+     *       0 -> 1(4) 2(3)
+     *
+     * means vertex 0 is connected to:
+     *
+     *       1 with weight 4
+     *       2 with weight 3
+     */
+    void printGraph() const
+    {
+        cout << "Adjacency List:\n";
+
+        for (int i = 0; i < numberOfVertices; i++)
+        {
+            cout << i << " -> ";
+
+            for (const Edge& edge : adjList[i])
+            {
+                cout << edge.destination
+                    << "(" << edge.weight << ") ";
             }
-            cout << "\n";
+
+            cout << endl;
         }
-        cout << endl;
     }
 };
 
-int main() {
-    cout << "     UNIVERSAL GRAPH ENGINEERING DIAGNOSTIC SUITE      \n";
+// =========================== MAIN FUNCTION ===========================
 
-    // PHASE 1: COMPLEX WEIGHTED MESH CONSTRUCTION
-    cout << "--- PHASE 1: Graph Architecture Initialization ---\n";
-    
-    // Instantiating a graph with 7 vertices (Nodes indexed 0 through 6)
-    // The second parameter set to 'false' indicates an UNDIRECTED network mesh.
-    Graph g(7, false);
+int main()
+{
+    /*
+     * Create an undirected weighted graph.
+     *
+     * Vertices:
+     *
+     *       0  1  2  3  4  5  6
+     */
+    Graph graph(7, false);
 
-    cout << "[Action] Mapping structural link matrices with explicit costs...\n";
-    
-    // Constructing an interconnected topology inspired by standard lecture slide examples:
-    g.addEdge(0, 1, 4);  // Edge from 0 to 1, weight = 4
-    g.addEdge(0, 2, 3);  // Edge from 0 to 2, weight = 3
-    g.addEdge(1, 2, 1);  // Edge from 1 to 2, weight = 1
-    g.addEdge(1, 3, 2);  // Edge from 1 to 3, weight = 2
-    g.addEdge(1, 4, 7);  // Edge from 1 to 4, weight = 7
-    g.addEdge(2, 4, 4);  // Edge from 2 to 4, weight = 4
-    g.addEdge(3, 4, 1);  // Edge from 3 to 4, weight = 1
-    g.addEdge(3, 5, 5);  // Edge from 3 to 5, weight = 5
-    g.addEdge(4, 5, 3);  // Edge from 4 to 5, weight = 3
-    g.addEdge(4, 6, 8);  // Edge from 4 to 6, weight = 8
-    g.addEdge(5, 6, 2);  // Edge from 5 to 6, weight = 2
+    // ==================== BUILD GRAPH ====================
 
-    // Print out the structural adjacency array lists to inspect memory pointers
-    g.printGraph();
+    graph.addEdge(0, 1, 4);
+    graph.addEdge(0, 2, 3);
+    graph.addEdge(1, 2, 1);
+    graph.addEdge(1, 3, 2);
+    graph.addEdge(1, 4, 7);
+    graph.addEdge(2, 4, 4);
+    graph.addEdge(3, 4, 1);
+    graph.addEdge(3, 5, 5);
+    graph.addEdge(4, 5, 3);
+    graph.addEdge(4, 6, 8);
+    graph.addEdge(5, 6, 2);
 
+    cout << "--- GRAPH ---" << endl;
 
-    // PHASE 2: TRAVERSAL TRACING COMPARISON
-    cout << "--- PHASE 2: Systematic Graph Traversals ---\n";
-    
-    /* Breadth-First Search (BFS)
-       Expected Behavior: Explores vertices in clean concentric levels. 
-       Starting from 0, it discovers direct neighbors (1 and 2) before advancing to interior levels.
-    */
-    cout << "[Execute] Initializing Breadth-First Sweep...\n";
-    g.BFS(0);
-    cout << endl;
+    graph.printGraph();
 
-    /* Depth-First Search (DFS)
-       Expected Behavior: Dives straight to the deepest branch boundary 
-       via recursive tracking stacks before popping back to examine alternate pathways.
-    */
-    cout << "[Execute] Initializing Depth-First Sweep...\n";
-    g.DFS(0);
-    cout << "\n";
+    // ==================== BFS ====================
 
+    cout << "\n--- BFS ---" << endl;
 
-    // PHASE 3: DIJKSTRA'S SHORTEST PATH OPTIMIZATION RUNS
-    cout << "--- PHASE 3: Dijkstra's Single-Source Shortest Path Optimization ---\n";
-    
-    /* Running from Origin Node [0]
-       Verifies if path relaxation properly chooses indirect cheaper paths. 
-    */
-    cout << "[Compute] Calculating global minimum spanning path distances from Source Node [0]...";
-    g.dijkstra(0);
-    cout << endl;
+    cout << "BFS from 0: ";
+    graph.BFS(0);
 
-    /* Alternate Root Verification Passing
-       Running the optimization mapping again from a deep node inside the graph [Node 6]
-       to check cost evaluations when moving in reverse across undirected routes.
-    */
-    cout << "[Compute] Running optimization diagnostics from interior Pivot Node [6]...";
-    g.dijkstra(6);
-    cout << endl;
+    // ==================== DFS ====================
+
+    cout << "\n--- DFS ---" << endl;
+
+    cout << "DFS from 0: ";
+    graph.DFS(0);
+
+    // ==================== DIJKSTRA ====================
+
+    cout << "\n--- DIJKSTRA ---" << endl;
+
+    graph.dijkstra(0);
 
     return 0;
 }

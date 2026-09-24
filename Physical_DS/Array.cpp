@@ -1,226 +1,391 @@
-#include <iostream>
+﻿#include <iostream>
 
 using namespace std;
 
-class Array{
-    private:
-        int size;
-        int length;
-        int*arr;
+/**
+ * ============================================================================
+ *                           ARRAY ADT - LEARNING GUIDE
+ * ============================================================================
+ *
+ * This Array ADT uses a dynamically allocated array.
+ *
+ * It keeps two important values:
+ *
+ *       size   -> total capacity of the array
+ *       length -> number of elements currently stored
+ *
+ * Example:
+ *
+ *       Capacity (size) = 8
+ *       Length          = 5
+ *
+ *       [10 20 30 40 50 |     |     |     ]
+ *        <--- length --->    unused space
+ *        <----------- size ----------->
+ *
+ * Main Operations:
+ *   - Fill
+ *   - Display
+ *   - Search
+ *   - Append
+ *   - Insert
+ *   - Delete
+ *   - Delete by value
+ *   - Enlarge
+ *   - Merge
+ *
+ * Common Time Complexities:
+ *
+ *   Access       : O(1)
+ *   Search       : O(n)
+ *   Append       : O(1)
+ *   Insert       : O(n)
+ *   Delete       : O(n)
+ *
+ * Space Complexity: O(size)
+ *
+ * ============================================================================
+ */
 
+class Array
+{
+private:
+    int size;
+    int length;
+    int* arr;
 
-    public:
-        // Constructor to initialize the array
-        Array(int arr_size){
-            size = arr_size;
-            length = 0;
-            arr = new int[arr_size];
+public:
+    // ==================== CONSTRUCTOR ====================
+
+    /**
+     * Creates an empty array with the given capacity.
+     */
+    Array(int arrSize)
+    {
+        size = arrSize;
+        length = 0;
+
+        arr = new int[size];
+    }
+
+    // ==================== ARRAY OPERATIONS ====================
+
+    /**
+     * FILL
+     *
+     * Takes values from the user and stores them in the array.
+     */
+    void fill()
+    {
+        int numberOfElements;
+
+        cout << "Enter number of elements: ";
+        cin >> numberOfElements;
+
+        if (numberOfElements < 0 || numberOfElements > size)
+        {
+            cout << "Invalid number of elements.\n";
+            return;
         }
 
-        // Function to fill the array with user input
-        void Fill(){
-            int no_of_elements;
-            cout<<"Enter the number ofelements of the array: ";
-            cin>>no_of_elements;
-            if(no_of_elements>size){
-                cout<<"The number of elements exceeds the size of the array."<<endl;
-                return;
-            }
-            cout<<"Enter the elements of the array: ";
-            for(int i=0; i<no_of_elements; i++){
-                cout<<"Element "<<i+1<<": ";
-                cin>>arr[i];
-            }
-            length = no_of_elements;
+        for (int i = 0; i < numberOfElements; i++)
+        {
+            cin >> arr[i];
         }
 
-        // Function to display the elements of the array
-        void Display(){
-            cout<<"The elements of the array are: ";
-            for(int i=0; i<length; i++){
-                cout<<arr[i]<<" ";
-            }
-            cout<<endl;
-        }
-        // Function to get the size of the array
-        int GetSize(){
-            return size;
-        }
-        // Function to get the length of the array
-        int GetLength(){
-            return length;
-        }
+        length = numberOfElements;
+    }
 
-        // Function to search for an element in the array
-        int search(int key){
-            for(int i=0; i<length; i++){
-                if(arr[i]==key){
-                    return i;
-                    break;
-                }
-            }
-            return -1;
+    /**
+     * DISPLAY
+     *
+     * Prints the currently stored elements.
+     */
+    void display() const
+    {
+        cout << "Array: ";
+
+        for (int i = 0; i < length; i++)
+        {
+            cout << arr[i] << " ";
         }
 
-        // Function to append an element at the end of the array
-        void append(int key){
-            if(length<size){
-                arr[length]=key;
-                length++;
-            }
-            else{
-                cout<<"The array is full. Cannot append the element."<<endl;
-            }
+        cout << "\n";
+    }
+
+    /**
+     * GET SIZE
+     *
+     * Returns the total capacity.
+     */
+    int getSize() const
+    {
+        return size;
+    }
+
+    /**
+     * GET LENGTH
+     *
+     * Returns the number of stored elements.
+     */
+    int getLength() const
+    {
+        return length;
+    }
+
+    /**
+     * SEARCH
+     *
+     * Returns the first index containing key.
+     * Returns -1 if key is not found.
+     */
+    int search(int key) const
+    {
+        for (int i = 0; i < length; i++)
+        {
+            if (arr[i] == key)
+                return i;
         }
 
-        // Function to insert an element at a specific index in the array
-        void insert(int index, int key){
-            if(index<0 || index>length){
-                cout<<"Invalid index. Cannot insert the element."<<endl;
-                return;
-            }
-            if(length==size){
-                cout<<"The array is full. Cannot insert the element."<<endl;
-                return;
-            }
-            for(int i=length; i>index; i--){
-                arr[i]=arr[i-1];
-            }
-            arr[index]=key;
-            length++;
+        return -1;
+    }
+
+    /**
+     * APPEND
+     *
+     * Adds an element at the end of the stored elements.
+     *
+     * Visualization:
+     *
+     *   Before:
+     *   [10 20 30 |   |   ]
+     *             ^
+     *           length
+     *
+     *   After append(40):
+     *   [10 20 30 40 |   ]
+     */
+    void append(int key)
+    {
+        if (length == size)
+        {
+            cout << "Array is full.\n";
+            return;
         }
 
-        // Function to delete an element at a specific index in the array
-        void Delete(int index){
-            if(index<0 || index>=length){
-                cout<<"Invalid index. Cannot delete the element."<<endl;
-                return;
-            }
-            for(int i=index; i<length-1; i++){
-                arr[i]=arr[i+1];
-            }
-            length--;
+        arr[length] = key;
+        length++;
+    }
+
+    /**
+     * INSERT
+     *
+     * Inserts a value at the given index.
+     *
+     * Example:
+     *
+     *   Before:
+     *   [10 20 30 40]
+     *
+     *   insert(1, 15)
+     *
+     *   Shift:
+     *   [10 20 20 30 40]
+     *
+     *   Result:
+     *   [10 15 20 30 40]
+     */
+    void insert(int index, int key)
+    {
+        if (index < 0 || index > length)
+        {
+            cout << "Invalid index.\n";
+            return;
         }
 
-
-        // Function to delete an element by value in the array
-        void delete_by_value(int key){
-            int index = search(key);
-            if(index==-1){
-                cout<<"Element not found in the array."<<endl;
-                return;
-            }
-            Delete(index);
+        if (length == size)
+        {
+            cout << "Array is full.\n";
+            return;
         }
 
-
-
-        // Function to enlarge the size of the array
-        void enlarge(int new_size){
-            if(new_size<=size){
-                cout<<"New size must be greater than the current size."<<endl;
-                return;
-            }
-            else{
-                int* new_arr = new int[new_size];
-                for(int i=0; i<length; i++){
-                    new_arr[i]=arr[i];
-                }
-                delete[] arr;
-                arr = new_arr;
-                size = new_size;
-            }
+        // Shift elements right to make space.
+        for (int i = length; i > index; i--)
+        {
+            arr[i] = arr[i - 1];
         }
 
-        // Function to merge two arrays
-        void merge(Array arr2){
-            int new_size = size + arr2.GetSize();
-            int* new_arr = new int[new_size];
-            for(int i=0; i<length; i++){
-                new_arr[i]=arr[i];
-            }
-            for(int i=0; i<arr2.GetLength(); i++){
-                new_arr[length+i]=arr2.arr[i];
-            }
-            delete[] arr;
-            arr = new_arr;
-            size = new_size;
-            length += arr2.GetLength();
+        arr[index] = key;
+        length++;
+    }
+
+    /**
+     * DELETE AT
+     *
+     * Deletes the element at a specific index.
+     *
+     * Elements after it are shifted left.
+     */
+    void deleteAt(int index)
+    {
+        if (index < 0 || index >= length)
+        {
+            cout << "Invalid index.\n";
+            return;
         }
 
-        // Destructor to free the memory allocated for the array
-        ~Array(){
-            delete[] arr;
+        // Shift elements left to fill the deleted position.
+        for (int i = index; i < length - 1; i++)
+        {
+            arr[i] = arr[i + 1];
         }
 
+        length--;
+    }
 
-    };
+    /**
+     * DELETE BY VALUE
+     *
+     * Finds the first occurrence of key
+     * and deletes it.
+     */
+    void deleteByValue(int key)
+    {
+        int index = search(key);
 
+        if (index == -1)
+        {
+            cout << "Element not found.\n";
+            return;
+        }
 
-    
-    int main() {
-    cout << "--- Initializing Array (Size 5) ---" << endl;
+        deleteAt(index);
+    }
+
+    /**
+     * ENLARGE
+     *
+     * Creates a larger array and copies the elements into it.
+     *
+     * Visualization:
+     *
+     *   Old:
+     *   [10 20 30 |   |   ]
+     *
+     *             ↓
+     *
+     *   New:
+     *   [10 20 30 |   |   |   |   ]
+     */
+    void enlarge(int newSize)
+    {
+        if (newSize <= size)
+        {
+            cout << "New size must be greater than current size.\n";
+            return;
+        }
+
+        int* newArr = new int[newSize];
+
+        // Copy existing elements.
+        for (int i = 0; i < length; i++)
+        {
+            newArr[i] = arr[i];
+        }
+
+        delete[] arr;
+
+        arr = newArr;
+        size = newSize;
+    }
+
+    /**
+     * MERGE
+     *
+     * Adds the elements of another Array object
+     * to the end of this array.
+     *
+     * The second array is passed by reference
+     * to avoid copying an object that owns dynamic memory.
+     */
+    void merge(const Array& other)
+    {
+        int newSize = size + other.size;
+        int* newArr = new int[newSize];
+
+        // Copy this array.
+        for (int i = 0; i < length; i++)
+        {
+            newArr[i] = arr[i];
+        }
+
+        // Copy the other array after it.
+        for (int i = 0; i < other.length; i++)
+        {
+            newArr[length + i] = other.arr[i];
+        }
+
+        delete[] arr;
+
+        arr = newArr;
+        size = newSize;
+        length += other.length;
+    }
+
+    // ==================== DESTRUCTOR ====================
+
+    /**
+     * Frees the dynamically allocated memory.
+     */
+    ~Array()
+    {
+        delete[] arr;
+    }
+};
+
+// =========================== MAIN FUNCTION ===========================
+
+int main()
+{
     Array myArr(5);
 
-    // 1. Test Fill
-    myArr.Fill(); 
-    myArr.Display();
-    cout << "Current Length: " << myArr.GetLength() << ", Capacity: " << myArr.GetSize() << endl << endl;
+    myArr.append(10);
+    myArr.append(20);
+    myArr.append(30);
 
-    // 2. Test Search
-    int key = 20;
-    cout << "--- Testing Search ---" << endl;
-    int pos = myArr.search(key);
-    if (pos != -1)
-        cout << "Found " << key << " at index " << pos << endl;
-    else
-        cout << key << " not found." << endl << endl;
+    cout << "Initial array:\n";
+    myArr.display();
 
-    // 3. Test Append
-    cout << "--- Testing Append (Adding 100) ---" << endl;
-    myArr.append(100);
-    myArr.Display();
-    cout << endl;
+    cout << "Index of 20: "
+        << myArr.search(20) << "\n";
 
-    // 4. Test Insert (at index 1)
-    cout << "--- Testing Insert (Value 55 at Index 1) ---" << endl;
-    myArr.insert(1, 55);
-    myArr.Display();
-    cout << endl;
+    myArr.insert(1, 15);
 
-    // 5. Test Delete by Index
-    cout << "--- Testing Delete (Index 0) ---" << endl;
-    myArr.Delete(0);
-    myArr.Display();
-    cout << endl;
+    cout << "\nAfter insert:\n";
+    myArr.display();
 
-    // 6. Test Delete by Value
-    cout << "--- Testing Delete by Value (100) ---" << endl;
-    myArr.delete_by_value(100);
-    myArr.Display();
-    cout << endl;
+    myArr.deleteAt(2);
 
-    // 7. Test Enlarge
-    cout << "--- Testing Enlarge (New Size 10) ---" << endl;
+    cout << "\nAfter delete:\n";
+    myArr.display();
+
     myArr.enlarge(10);
-    cout << "New Size: " << myArr.GetSize() << endl;
-    myArr.append(999);
-    myArr.Display();
-    cout << endl;
 
-    // 8. Test Merge
-    cout << "--- Testing Merge with another Array ---" << endl;
-    Array otherArr(3);
-    otherArr.append(1);
-    otherArr.append(2);
-    
-    cout << "Merging with: ";
-    otherArr.Display();
-    
-    myArr.merge(otherArr);
-    cout << "Final Merged Array: ";
-    myArr.Display();
-    cout << "Final Length: " << myArr.GetLength() << endl;
+    myArr.append(40);
+    myArr.append(50);
+
+    cout << "\nAfter enlarge and append:\n";
+    myArr.display();
+
+    Array other(3);
+
+    other.append(100);
+    other.append(200);
+
+    myArr.merge(other);
+
+    cout << "\nAfter merge:\n";
+    myArr.display();
 
     return 0;
 }

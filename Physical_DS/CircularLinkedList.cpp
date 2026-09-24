@@ -1,394 +1,546 @@
-#include<iostream>
+#include <iostream>
+
 using namespace std;
 
 /**
- * Node class for Circular Doubly Linked List
- * Each node contains:
- * - data: the actual value stored
- * - next: pointer to next node
- * - prev: pointer to previous node
+ * ============================================================================
+ *                CIRCULAR DOUBLY LINKED LIST - LEARNING GUIDE
+ * ============================================================================
+ *
+ * A Circular Doubly Linked List combines two ideas:
+ *
+ *   1. Doubly Linked List
+ *      Every node has next AND prev.
+ *
+ *   2. Circular Linked List
+ *      The last node connects back to the first.
+ *
+ * Visualization:
+ *
+ *                    +--------------------------+
+ *                    |                          |
+ *                    v                          |
+ *   head -> [10] <-> [20] <-> [30] <-> [40] <- tail
+ *            ^                               |
+ *            |_______________________________|
+ *
+ * Important circular links:
+ *
+ *       head->prev == tail
+ *       tail->next == head
+ *
+ * There is NO NULL between the first and last nodes.
+ *
+ * Advantages:
+ *   - Traverse forward and backward
+ *   - Can keep moving around the list
+ *   - Insert/delete at beginning and end in O(1)
+ *
+ * Disadvantages:
+ *   - More pointer updates
+ *   - Must be careful not to loop forever
+ *
+ * Time Complexity:
+ *   Insert/Delete at beginning : O(1)
+ *   Insert/Delete at end       : O(1)
+ *   Search                     : O(n)
+ *   Insert/Delete at position : O(n)
+ *
+ * Space Complexity: O(n)
+ *
+ * ============================================================================
  */
+
+ // =========================== NODE CLASS ===========================
+
+ /**
+  * Each node stores:
+  *
+  *       [ PREV | DATA | NEXT ]
+  *
+  * When a single node is created:
+  *
+  *       +-------+
+  *       |       |
+  *       v       |
+  *     [ 10 ]
+  *       ^       |
+  *       |_______|
+  *
+  * So the node points to itself in both directions.
+  */
 template <typename T>
-class Node {
+class Node
+{
 public:
     T data;
     Node* next;
     Node* prev;
 
-    // Constructor - creates a node that points to itself (circular)
-    Node(T data) {
-        this->data = data;
-        this->next = this;  // Points to itself initially
-        this->prev = this;  // Points to itself initially
+    Node(T value)
+    {
+        data = value;
+
+        // A single node is circular by itself.
+        next = this;
+        prev = this;
     }
 };
 
-/**
- * Circular Doubly Linked List class
- * Features:
- * - Circular: last node connects to first, first to last
- * - Doubly: each node has forward and backward links
- */
+// =========================== CIRCULAR DOUBLY LINKED LIST ===========================
+
 template <typename T>
-class LinkedList {
+class LinkedList
+{
 private:
-    Node<T>* head;  // Points to first node
-    Node<T>* tail;  // Points to last node
-    int size;       // Tracks number of nodes
+    Node<T>* head;
+    Node<T>* tail;
+    int size;
 
 public:
-    // Constructor - initializes empty list
-    LinkedList() {
-        this->head = NULL;
-        this->tail = NULL;
-        this->size = 0;
-    }
 
-    // Returns true if list has no nodes
-    bool isEmpty() const {
-        return size == 0;
-    }
+    // ==================== CONSTRUCTOR ====================
 
     /**
-     * Insert at the beginning of the list
-     * Time Complexity: O(1)
+     * Creates an empty circular doubly linked list.
      */
-    void insertInStart(T data) {
-        Node<T>* newNode = new Node<T>(data);
-        size++;
-
-        if (head == NULL) {
-            // First node in empty list
-            head = newNode;
-            tail = newNode;
-            // Node already points to itself (circular)
-        }
-        else {
-            // Insert before head
-            newNode->next = head;
-            head->prev = newNode;
-            head = newNode;
-            
-            // Maintain circular connection
-            head->prev = tail;
-            tail->next = head;
-        }
-    }
-
-    /**
-     * Insert at the end of the list
-     * Time Complexity: O(1)
-     */
-    void insertEnd(T data) {
-        if (isEmpty()) {
-            insertInStart(data);  // First node case
-        }
-        else {
-            Node<T>* newNode = new Node<T>(data);
-            size++;
-            
-            // Insert after tail
-            tail->next = newNode;
-            newNode->prev = tail;
-            newNode->next = head;  // Connect to head (circular)
-            tail = newNode;
-            
-            // Maintain circular connection from head to tail
-            head->prev = tail;
-        }
-    }
-
-    /**
-     * Insert at a specific position (0-based index)
-     * Time Complexity: O(n)
-     */
-    void insertAt(T data, int pos) {
-        // Validate position
-        if (pos < 0 || pos > size) {
-            cout << "Invalid position" << endl;
-            return;
-        }
-        else if (pos == 0) {
-            insertInStart(data);
-        }
-        else if (pos == size) {
-            insertEnd(data);
-        }
-        else {
-            Node<T>* newNode = new Node<T>(data);
-            Node<T>* temp = head;
-            
-            // Traverse to position before insertion point
-            for (int i = 0; i < pos - 1; i++) {
-                temp = temp->next;
-            }
-            
-            // Insert between temp and temp->next
-            newNode->next = temp->next;
-            newNode->prev = temp;
-            temp->next->prev = newNode;
-            temp->next = newNode;
-            size++;
-        }
-    }
-
-    /**
-     * Display list from head to tail
-     * Time Complexity: O(n)
-     */
-    void display() const {
-        if (isEmpty()) {
-            cout << "List is empty" << endl;
-            return;
-        }
-        
-        Node<T>* temp = head;
-        for (int i = 0; i < size; i++) {
-            cout << temp->data << " ";
-            temp = temp->next;
-        }
-        cout << endl;
-    }
-
-    /**
-     * Display list from tail to head (reverse order)
-     * Time Complexity: O(n)
-     */
-    void displayReverse() const {
-        if (isEmpty()) {
-            cout << "List is empty" << endl;
-            return;
-        }
-        
-        Node<T>* temp = tail;
-        for (int i = 0; i < size; i++) {
-            cout << temp->data << " ";
-            temp = temp->prev;
-        }
-        cout << endl;
-    }
-
-    /**
-     * Verify that circular links are properly maintained
-     * Useful for debugging
-     */
-    void verifyCircular() const {
-        if (isEmpty()) {
-            cout << "List is empty" << endl;
-            return;
-        }
-
-        cout << "Verification:" << endl;
-        cout << "Head->prev = " << head->prev->data 
-             << " (should be tail: " << tail->data << ")" << endl;
-        cout << "Tail->next = " << tail->next->data 
-             << " (should be head: " << head->data << ")" << endl;
-    }
-
-    /**
-     * Search for a value and return its position
-     * Returns: index if found, -1 if not found
-     * Time Complexity: O(n)
-     */
-    int search(T key) {
-        Node<T>* temp = head;
-        int pos = 0;
-        
-        for (int i = 0; i < size; i++) {
-            if (temp->data == key) {
-                cout << "Found " << key << " at index " << pos << endl;
-                return pos;
-            }
-            temp = temp->next;
-            pos++;
-        }
-        
-        cout << "Element " << key << " not found" << endl;
-        return -1;
-    }
-
-    /**
-     * Delete the first node
-     * Time Complexity: O(1)
-     */
-    void deleteInStart() {
-        if (isEmpty()) {
-            cout << "List is empty - cannot delete" << endl;
-            return;
-        }
-
-        Node<T>* temp = head;
-        
-        if (size == 1) {
-            // Only one node in list
-            delete head;
-            head = NULL;
-            tail = NULL;
-        }
-        else {
-            // Move head to next node
-            head = head->next;
-            head->prev = tail;
-            tail->next = head;
-            delete temp;
-        }
-        
-        size--;
-    }
-
-    /**
-     * Delete the last node
-     * Time Complexity: O(1)
-     */
-    void deleteEnd() {
-        if (isEmpty()) {
-            cout << "List is empty - cannot delete" << endl;
-            return;
-        }
-
-        Node<T>* temp = tail;
-        
-        if (size == 1) {
-            // Only one node in list
-            delete head;
-            head = NULL;
-            tail = NULL;
-        }
-        else {
-            // Move tail to previous node
-            tail = tail->prev;
-            tail->next = head;
-            head->prev = tail;
-            delete temp;
-        }
-        
-        size--;
-    }
-
-    /**
-     * Delete node at specific position (0-based index)
-     * Time Complexity: O(n)
-     */
-    void deleteAt(int pos) {
-        // Validate position
-        if (pos < 0 || pos >= size) {
-            cout << "Invalid position" << endl;
-            return;
-        }
-        else if (pos == 0) {
-            deleteInStart();
-        }
-        else if (pos == size - 1) {
-            deleteEnd();
-        }
-        else {
-            Node<T>* temp = head;
-            
-            // Traverse to node to be deleted
-            for (int i = 0; i < pos; i++) {
-                temp = temp->next;
-            }
-            
-            // Bypass the node
-            temp->prev->next = temp->next;
-            temp->next->prev = temp->prev;
-            delete temp;
-            size--;
-        }
-    }
-
-    /**
-     * Delete entire list and free memory
-     * Time Complexity: O(n)
-     */
-    void deleteList() {
-        if (isEmpty()) {
-            return;
-        }
-        
-        // Break circular links to simplify deletion
-        head->prev = NULL;
-        tail->next = NULL;
-        
-        // Delete all nodes
-        while (head != NULL) {
-            Node<T>* temp = head;
-            head = head->next;
-            delete temp;
-        }
-        
-        // Reset pointers and size
+    LinkedList()
+    {
         head = NULL;
         tail = NULL;
         size = 0;
     }
 
-    // Get current size of list
-    int getSize() const {
+    // ==================== HELPER METHODS ====================
+
+    bool isEmpty() const
+    {
+        return size == 0;
+    }
+
+    int getSize() const
+    {
         return size;
     }
 
-    // Destructor - automatically cleans up memory
-    ~LinkedList() {
+    // ==================== INSERTION OPERATIONS ====================
+
+    /**
+     * INSERT AT BEGINNING
+     *
+     * Before:
+     *
+     *       tail <-> [10] <-> [20] <-> head
+     *         ^                         |
+     *         +-------------------------+
+     *
+     * We insert the new node before head.
+     *
+     * After:
+     *
+     *       tail <-> [5] <-> [10] <-> [20]
+     *         ^                          |
+     *         +--------------------------+
+     */
+    void insertInStart(T data)
+    {
+        Node<T>* newNode = new Node<T>(data);
+
+        if (isEmpty())
+        {
+            head = tail = newNode;
+        }
+        else
+        {
+            newNode->next = head;
+            newNode->prev = tail;
+
+            head->prev = newNode;
+            tail->next = newNode;
+
+            head = newNode;
+        }
+
+        size++;
+    }
+
+    /**
+     * INSERT AT END
+     *
+     * Because tail is known, no traversal is needed.
+     *
+     * The new node is placed between tail and head.
+     *
+     * Time Complexity: O(1)
+     */
+    void insertEnd(T data)
+    {
+        if (isEmpty())
+        {
+            insertInStart(data);
+            return;
+        }
+
+        Node<T>* newNode = new Node<T>(data);
+
+        newNode->prev = tail;
+        newNode->next = head;
+
+        tail->next = newNode;
+        head->prev = newNode;
+
+        tail = newNode;
+
+        size++;
+    }
+
+    /**
+     * INSERT AT POSITION
+     *
+     * Position 0 -> beginning
+     * Position size -> end
+     * Otherwise -> insert in the middle
+     */
+    void insertAt(T data, int position)
+    {
+        if (position < 0 || position > size)
+        {
+            cout << "Invalid position." << endl;
+            return;
+        }
+
+        if (position == 0)
+        {
+            insertInStart(data);
+            return;
+        }
+
+        if (position == size)
+        {
+            insertEnd(data);
+            return;
+        }
+
+        Node<T>* current = head;
+
+        // Move to the node currently at this position.
+        for (int i = 0; i < position; i++)
+        {
+            current = current->next;
+        }
+
+        Node<T>* newNode = new Node<T>(data);
+
+        // Insert newNode before current.
+        newNode->prev = current->prev;
+        newNode->next = current;
+
+        current->prev->next = newNode;
+        current->prev = newNode;
+
+        size++;
+    }
+
+    // ==================== DISPLAY OPERATIONS ====================
+
+    /**
+     * DISPLAY FORWARD
+     *
+     * In a circular list, there is no NULL to stop at.
+     * We use size to know how many nodes to visit.
+     */
+    void display() const
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
+            return;
+        }
+
+        Node<T>* current = head;
+
+        for (int i = 0; i < size; i++)
+        {
+            cout << current->data << " ";
+            current = current->next;
+        }
+
+        cout << endl;
+    }
+
+    /**
+     * DISPLAY REVERSE
+     *
+     * Start at tail and follow prev pointers.
+     */
+    void displayReverse() const
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
+            return;
+        }
+
+        Node<T>* current = tail;
+
+        for (int i = 0; i < size; i++)
+        {
+            cout << current->data << " ";
+            current = current->prev;
+        }
+
+        cout << endl;
+    }
+
+    // ==================== SEARCH OPERATION ====================
+
+    /**
+     * SEARCH
+     *
+     * We cannot use current != NULL because the list is circular.
+     * Instead, we stop after visiting exactly 'size' nodes.
+     */
+    int search(T key) const
+    {
+        if (isEmpty())
+            return -1;
+
+        Node<T>* current = head;
+
+        for (int i = 0; i < size; i++)
+        {
+            if (current->data == key)
+                return i;
+
+            current = current->next;
+        }
+
+        return -1;
+    }
+
+    // ==================== CIRCULAR PROPERTY ====================
+
+    /**
+     * CHECK CIRCULAR LINKS
+     *
+     * For a correct circular doubly linked list:
+     *
+     *       head->prev == tail
+     *       tail->next == head
+     */
+    void verifyCircular() const
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
+            return;
+        }
+
+        cout << "head->prev = " << head->prev->data << endl;
+        cout << "tail->next = " << tail->next->data << endl;
+    }
+
+    // ==================== DELETION OPERATIONS ====================
+
+    /**
+     * DELETE FROM BEGINNING
+     *
+     * Special case:
+     * If there is only one node, both head and tail become NULL.
+     *
+     * Otherwise:
+     *
+     *   1. Move head to the next node.
+     *   2. Connect new head back to tail.
+     *   3. Connect tail back to new head.
+     *   4. Delete the old head.
+     */
+    void deleteInStart()
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
+            return;
+        }
+
+        Node<T>* nodeToDelete = head;
+
+        if (size == 1)
+        {
+            head = tail = NULL;
+        }
+        else
+        {
+            head = head->next;
+
+            head->prev = tail;
+            tail->next = head;
+        }
+
+        delete nodeToDelete;
+        size--;
+    }
+
+    /**
+     * DELETE FROM END
+     *
+     * Move tail backward and reconnect it to head.
+     *
+     * Time Complexity: O(1)
+     */
+    void deleteEnd()
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
+            return;
+        }
+
+        Node<T>* nodeToDelete = tail;
+
+        if (size == 1)
+        {
+            head = tail = NULL;
+        }
+        else
+        {
+            tail = tail->prev;
+
+            tail->next = head;
+            head->prev = tail;
+        }
+
+        delete nodeToDelete;
+        size--;
+    }
+
+    /**
+     * DELETE AT POSITION
+     *
+     * For a middle node:
+     *
+     *   [A] <-> [B] <-> [C]
+     *             ^
+     *           delete
+     *
+     * Connect A directly to C:
+     *
+     *   [A] <-> [C]
+     */
+    void deleteAt(int position)
+    {
+        if (position < 0 || position >= size)
+        {
+            cout << "Invalid position." << endl;
+            return;
+        }
+
+        if (position == 0)
+        {
+            deleteInStart();
+            return;
+        }
+
+        if (position == size - 1)
+        {
+            deleteEnd();
+            return;
+        }
+
+        Node<T>* current = head;
+
+        for (int i = 0; i < position; i++)
+        {
+            current = current->next;
+        }
+
+        current->prev->next = current->next;
+        current->next->prev = current->prev;
+
+        delete current;
+        size--;
+    }
+
+    /**
+     * DELETE ENTIRE LIST
+     *
+     * Because the list is circular, we cannot simply use:
+     *
+     *     while (head != NULL)
+     *
+     * We use the known size instead.
+     */
+    void deleteList()
+    {
+        if (isEmpty())
+            return;
+
+        Node<T>* current = head;
+
+        for (int i = 0; i < size; i++)
+        {
+            Node<T>* nextNode = current->next;
+            delete current;
+            current = nextNode;
+        }
+
+        head = tail = NULL;
+        size = 0;
+    }
+
+    // ==================== DESTRUCTOR ====================
+
+    /**
+     * Automatically frees all nodes.
+     */
+    ~LinkedList()
+    {
         deleteList();
     }
 };
 
-/**
- * Main function to demonstrate the Circular Doubly Linked List
- */
-int main() {
+// =========================== MAIN FUNCTION ===========================
+
+int main()
+{
     LinkedList<int> list;
-    
-    cout << "=== Circular Doubly Linked List Demonstration ===\n" << endl;
-    
-    // Test 1: Insertions
-    cout << "--- Testing Insertions ---" << endl;
+
+    // ==================== INSERTION ====================
+
+    cout << "--- INSERTION ---" << endl;
+
     list.insertEnd(10);
     list.insertEnd(20);
     list.insertEnd(30);
-    cout << "After insertEnd(10,20,30): ";
-    list.display();
-    
+
     list.insertInStart(5);
-    cout << "After insertInStart(5): ";
-    list.display();
-    
     list.insertAt(15, 2);
-    cout << "After insertAt(15,2): ";
+
+    cout << "Forward: ";
     list.display();
-    
-    // Test 2: Reverse traversal
-    cout << "\n--- Reverse Traversal ---" << endl;
-    cout << "List in reverse order: ";
+
+    cout << "Reverse: ";
     list.displayReverse();
-    
-    // Test 3: Verify circular property
-    cout << "\n--- Circular Property Verification ---" << endl;
+
+    // ==================== CIRCULAR PROPERTY ====================
+
+    cout << "\n--- CIRCULAR LINKS ---" << endl;
     list.verifyCircular();
-    
-    // Test 4: Search operations
-    cout << "\n--- Search Operations ---" << endl;
-    list.search(20);
-    list.search(100);
-    
-    // Test 5: Deletions
-    cout << "\n--- Deletion Operations ---" << endl;
+
+    // ==================== SEARCH ====================
+
+    cout << "\nIndex of 20: "
+        << list.search(20) << endl;
+
+    // ==================== DELETION ====================
+
+    cout << "\n--- DELETION ---" << endl;
+
     list.deleteInStart();
-    cout << "After deleteInStart (removed first): ";
-    list.display();
-    
     list.deleteEnd();
-    cout << "After deleteEnd (removed last): ";
-    list.display();
-    
     list.deleteAt(1);
-    cout << "After deleteAt(1) (removed at index 1): ";
+
     list.display();
-    
-    // Test 6: Final size
-    cout << "\n--- Final Information ---" << endl;
-    cout << "Final list size: " << list.getSize() << endl;
-    
+
     return 0;
 }

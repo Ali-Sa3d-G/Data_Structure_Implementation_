@@ -2,258 +2,378 @@
 
 using namespace std;
 
+/**
+ * ============================================================================
+ *                     BINARY SEARCH TREE - LEARNING GUIDE
+ * ============================================================================
+ *
+ * A Binary Search Tree (BST) is a binary tree where:
+ *
+ *       LEFT SUBTREE  <  NODE  <  RIGHT SUBTREE
+ *
+ * Example:
+ *
+ *                         50
+ *                       /    \
+ *                     30      70
+ *                    /  \    /  \
+ *                  20   40  60   80
+ *
+ * For every node:
+ *
+ *   - Smaller values go left.
+ *   - Larger values go right.
+ *
+ * Important:
+ *
+ *   In-Order traversal of a BST gives the values in SORTED order.
+ *
+ *       Left -> Root -> Right
+ *
+ * Main Operations:
+ *   - Insert
+ *   - Search
+ *   - Find Minimum / Maximum
+ *   - Delete
+ *   - Tree Traversals
+ *
+ * Time Complexity:
+ *   Average Search/Insert/Delete: O(log n)
+ *   Worst Case                  : O(n)
+ *
+ * Space Complexity:
+ *   O(h) for recursive operations
+ *   h = height of tree
+ *
+ * ============================================================================
+ */
 
-class Node{
-    public:
-        int data;
-        Node* left;
-        Node* right;
+ // =========================== NODE CLASS ===========================
 
-        // Constructor to initialize the node
-        Node(int value){
-            data = value;
-            left = nullptr;
-            right = nullptr;
-        }
+ /**
+  * Each tree node contains:
+  *
+  *               [ DATA ]
+  *               /      \
+  *            left      right
+  *
+  * left  -> smaller values
+  * right -> larger values
+  */
+class Node
+{
+public:
+    int data;
+    Node* left;
+    Node* right;
+
+    Node(int value)
+    {
+        data = value;
+        left = nullptr;
+        right = nullptr;
+    }
 };
 
+// =========================== BST CLASS ===========================
 
+class BST
+{
+private:
+    Node* root;
 
-class BST{
-    private:
-        Node* root;
+    // ==================== INSERT HELPER ====================
 
-    public:
-        // Constructor to initialize the BST
-        BST(){
-            root = nullptr;
+    /**
+     * Recursively finds the correct position for a new value.
+     */
+    Node* insert(Node* node, int value)
+    {
+        if (node == nullptr)
+            return new Node(value);
+
+        if (value < node->data)
+        {
+            node->left = insert(node->left, value);
+        }
+        else if (value > node->data)
+        {
+            node->right = insert(node->right, value);
         }
 
-        // Function to get the value of the root node
-        Node* getRoot(){
-            if (root != nullptr){
-                return root;
-            }
-            else{
-                cout << "The BST is empty." << endl;
-                return nullptr; // Return nullptr to indicate the BST is empty
-            }
+        // Duplicate values are ignored.
+        return node;
+    }
+
+    // ==================== SEARCH HELPER ====================
+
+    /**
+     * Uses the BST property to decide which side to search.
+     */
+    bool search(Node* node, int value) const
+    {
+        if (node == nullptr)
+            return false;
+
+        if (node->data == value)
+            return true;
+
+        if (value < node->data)
+            return search(node->left, value);
+
+        return search(node->right, value);
+    }
+
+    // ==================== MINIMUM ====================
+
+    /**
+     * The minimum value is the leftmost node.
+     *
+     * Example:
+     *
+     *          50
+     *         /
+     *       30
+     *      /
+     *    20  <- minimum
+     */
+    int findMin(Node* node) const
+    {
+        while (node->left != nullptr)
+        {
+            node = node->left;
         }
 
+        return node->data;
+    }
 
+    // ==================== DELETION ====================
 
-        // Function to insert a value into the BST
-        void insert(int value){
-            root = insertRec(root, value);
+    /**
+     * DELETE NODE
+     *
+     * There are three deletion cases:
+     *
+     * 1. Leaf:
+     *
+     *       30
+     *      /
+     *    20   <- delete
+     *
+     * 2. One child:
+     *
+     *       30
+     *         \
+     *          40
+     *           \
+     *            50
+     *
+     * 3. Two children:
+     *
+     *          50
+     *         /  \
+     *       30    70
+     *
+     * Replace 50 with its inorder successor
+     * (smallest value in the right subtree).
+     */
+    Node* deleteNode(Node* node, int value)
+    {
+        if (node == nullptr)
+            return nullptr;
+
+        if (value < node->data)
+        {
+            node->left = deleteNode(node->left, value);
+        }
+        else if (value > node->data)
+        {
+            node->right = deleteNode(node->right, value);
+        }
+        else
+        {
+            // Case 1 and 2:
+            // No left child, so return the right child.
+            if (node->left == nullptr)
+            {
+                Node* temp = node->right;
+                delete node;
+                return temp;
+            }
+
+            // No right child, so return the left child.
+            if (node->right == nullptr)
+            {
+                Node* temp = node->left;
+                delete node;
+                return temp;
+            }
+
+            // Case 3: two children.
+            int successor = findMin(node->right);
+
+            node->data = successor;
+
+            // Delete the duplicated successor from the right subtree.
+            node->right = deleteNode(node->right, successor);
         }
 
-        // Recursive function to insert a value into the BST
-        Node* insertRec(Node* node, int value){
-            if (node == nullptr){
-                return new Node(value);
-            }
-            if (value < node->data){
-                node->left = insertRec(node->left, value);
-            }
-            else if (value > node->data){
-                node->right = insertRec(node->right, value);
-            }
-            return node;
-        }
+        return node;
+    }
 
+    // ==================== TRAVERSALS ====================
 
+    void inOrder(Node* node) const
+    {
+        if (node == nullptr)
+            return;
 
-        // Function for in-order traversal
-        void inOrder(Node* root){
-            if (root != nullptr){
-                inOrder(root->left);
-                cout << root->data << " ";
-                inOrder(root->right);
-            }
-        }
+        inOrder(node->left);
 
+        cout << node->data << " ";
 
+        inOrder(node->right);
+    }
 
-        // Function for pre-order traversal
-        void preOrder(Node* root){
-            if (root != nullptr){
-                cout << root->data << " ";
-                preOrder(root->left);
-                preOrder(root->right);
-            }
-        }
+    void preOrder(Node* node) const
+    {
+        if (node == nullptr)
+            return;
 
+        cout << node->data << " ";
 
-        // Function for post-order traversal
-        void postOrder(Node* root){
-            if (root != nullptr){
-                postOrder(root->left);
-                postOrder(root->right);
-                cout << root->data << " ";
-            }
-        }   
+        preOrder(node->left);
+        preOrder(node->right);
+    }
 
+    void postOrder(Node* node) const
+    {
+        if (node == nullptr)
+            return;
 
+        postOrder(node->left);
+        postOrder(node->right);
 
-        // Function to search for a value in the BST
-        int search(int value){
-            if (searchRec(root, value)){
-                cout << "Value " << value << " found in the BST." << endl;
-                return value;
-            }
-            else{
-                cout << "Value " << value << " not found in the BST." << endl;
-                return -1; // Return -1 to indicate value not found
-            }
-        }
-        
+        cout << node->data << " ";
+    }
 
-        // Recursive function to search for a value in the BST
-        bool searchRec(Node* node, int value){
-            if (node == nullptr){
-                return false;
-            }
-            if (node->data == value){
-                return true;
-            }
-            else if (value < node->data){
-                return searchRec(node->left, value);
-            }
-            else{
-                return searchRec(node->right, value);
-            }
-        }
+    // ==================== CLEAR ====================
 
+    /**
+     * Post-order deletion ensures children are deleted
+     * before their parent.
+     */
+    void clear(Node* node)
+    {
+        if (node == nullptr)
+            return;
 
-        // Function to find the minimum value in the BST
-        int findMin(Node* node){
-            if (node == nullptr){
-                cout << "The BST is empty." << endl;
-                return -1; // Return -1 to indicate the BST is empty
-            }
-            while (node->left != nullptr){
-                node = node->left;
-            }
-            return node->data;
-        }
+        clear(node->left);
+        clear(node->right);
 
+        delete node;
+    }
 
-        // Function to find the maximum value in the BST
-        int findMax(Node* node){
-            if (node == nullptr){
-                cout << "The BST is empty." << endl;
-                return -1; // Return -1 to indicate the BST is empty
-            }   
-            while (node->right != nullptr){
-                node = node->right;
-            }
-            return node->data;
-        }
+public:
 
+    // ==================== CONSTRUCTOR ====================
 
-        // Function to delete a value from the BST
-        void deleteValue(int value){
-            root = deleteRec(root, value);
-        }
+    BST()
+    {
+        root = nullptr;
+    }
 
-        // Recursive function to delete a value from the BST
-        Node* deleteRec(Node* node, int value){
-            if (node == nullptr){
-                return node;
-            }
-            if (value < node->data){
-                node->left = deleteRec(node->left, value);
-            }
-            else if (value > node->data){
-                node->right = deleteRec(node->right, value);
-            }
-            else{
-                // Node with only one child or no child
-                if (node->left == nullptr){
-                    Node* temp = node->right;
-                    delete node;
-                    return temp;
-                }
-                else if (node->right == nullptr){
-                    Node* temp = node->left;
-                    delete node;
-                    return temp;
-                }
-                // Node with two children: Get the inorder successor
-                int minValue = findMin(node->right);
-                node->data = minValue;
-                node->right = deleteRec(node->right, minValue);
-            }
-            return node;
-        }
+    // ==================== PUBLIC OPERATIONS ====================
 
+    void insert(int value)
+    {
+        root = insert(root, value);
+    }
 
+    bool search(int value) const
+    {
+        return search(root, value);
+    }
 
+    void deleteValue(int value)
+    {
+        root = deleteNode(root, value);
+    }
 
+    void inOrder() const
+    {
+        inOrder(root);
+        cout << endl;
+    }
 
+    void preOrder() const
+    {
+        preOrder(root);
+        cout << endl;
+    }
+
+    void postOrder() const
+    {
+        postOrder(root);
+        cout << endl;
+    }
+
+    // ==================== DESTRUCTOR ====================
+
+    ~BST()
+    {
+        clear(root);
+    }
 };
 
+// =========================== MAIN FUNCTION ===========================
 
+int main()
+{
+    BST tree;
 
+    // ==================== INSERTION ====================
 
-int main() {
-    BST bst;
+    tree.insert(50);
+    tree.insert(30);
+    tree.insert(70);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(60);
+    tree.insert(80);
 
+    cout << "In-Order: ";
+    tree.inOrder();
 
-    // 1. Test Insertion and In-Order Traversal
-    cout << "--- 1. Testing Insertion and In-Order Traversal ---" << endl;
-    bst.insert(50);
-    bst.insert(30);
-    bst.insert(70);
-    bst.insert(20);
-    bst.insert(40);
-    bst.insert(60);
-    bst.insert(80);
-    cout << "In-Order Traversal (should be sorted): ";
-    bst.inOrder(bst.getRoot()); // Should print 20 30 40 50 60 70 80
-    cout << endl;
+    cout << "Pre-Order: ";
+    tree.preOrder();
 
+    cout << "Post-Order: ";
+    tree.postOrder();
 
-    // 2. Test Pre-Order Traversal
-    cout << "--- 2. Testing Pre-Order Traversal ---" << endl;
-    cout << "Pre-Order Traversal: ";
-    bst.preOrder(bst.getRoot()); // Should print 50 30 20 40 70 60 80
-    cout << endl;
+    // ==================== SEARCH ====================
 
+    cout << "\nSearch 40: "
+        << (tree.search(40) ? "Found" : "Not Found")
+        << endl;
 
-    // 3. Test Post-Order Traversal
-    cout << "--- 3. Testing Post-Order Traversal ---" << endl;
-    cout << "Post-Order Traversal: ";
-    bst.postOrder(bst.getRoot()); // Should print 20 40 30 60 80 70 50
-    cout << endl;   
+    cout << "Search 90: "
+        << (tree.search(90) ? "Found" : "Not Found")
+        << endl;
 
+    // ==================== DELETION ====================
 
-    // 4. Test Search Function
-    cout << "--- 4. Testing Search Function ---" << endl;
-    bst.search(40); // Should find 40
-    bst.search(90); // Should not find 90
-    cout << endl;
+    cout << "\nDeleting 20 (leaf):" << endl;
+    tree.deleteValue(20);
+    tree.inOrder();
 
+    cout << "Deleting 30 (one child):" << endl;
+    tree.deleteValue(30);
+    tree.inOrder();
 
-    // 5. Test Deletion
-    cout << "--- 5. Testing Deletion ---" << endl;
-    cout << "Deleting 20 (leaf node)..." << endl;
-    bst.deleteValue(20);
-    cout << "In-Order Traversal after deleting 20: ";
-    bst.inOrder(bst.getRoot()); // Should print 30 40 50
-    cout << endl;
-
-    cout << "Deleting 30 (node with one child)..." << endl;
-    bst.deleteValue(30);
-    cout << "In-Order Traversal after deleting 30: ";
-    bst.inOrder(bst.getRoot()); // Should print 40 50 60 70 80
-    cout << endl;
-
-    cout << "Deleting 50 (node with two children)..." << endl;
-    bst.deleteValue(50);
-    cout << "In-Order Traversal after deleting 50: ";
-    bst.inOrder(bst.getRoot()); // Should print 40 60 70
-    cout << endl;
+    cout << "Deleting 50 (two children):" << endl;
+    tree.deleteValue(50);
+    tree.inOrder();
 
     return 0;
 }

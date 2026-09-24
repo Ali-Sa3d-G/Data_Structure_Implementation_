@@ -1,83 +1,148 @@
 #include <iostream>
-#include <vector>
 
 using namespace std;
 
-// Helper template function to swap elements
-template <class T>
-void swap_elements(T &a, T &b) {
+/**
+ * ============================================================================
+ *                            HEAP SORT - LEARNING GUIDE
+ * ============================================================================
+ *
+ * Heap Sort uses a MAX HEAP.
+ *
+ * In a Max Heap:
+ *
+ *                 [MAX]
+ *                 /   \
+ *                /     \
+ *             larger than children
+ *
+ * Array representation:
+ *
+ *                 50
+ *               /    \
+ *             30      40
+ *            /  \    /
+ *           10  20  35
+ *
+ *              =>
+ *
+ *          [50 30 40 10 20 35]
+ *
+ * For index i:
+ *
+ *      Left child  = 2*i + 1
+ *      Right child = 2*i + 2
+ *
+ * Steps:
+ *
+ *   1. Build a Max Heap.
+ *   2. The maximum value is at index 0.
+ *   3. Swap it with the last unsorted element.
+ *   4. Reduce heap size.
+ *   5. Restore the Max Heap.
+ *
+ * Time Complexity: O(n log n)
+ * Space Complexity: O(log n)
+ * (recursive heapify)
+ *
+ * ============================================================================
+ */
+
+ /**
+  * Swaps two values.
+  */
+template <typename T>
+void swapValues(T& a, T& b)
+{
     T temp = a;
     a = b;
     b = temp;
 }
 
-// Maintains the max-heap property for a subtree rooted at index 'i'
-// n is the total size of the active heap inside the array
-template <class T>
-void max_heapify(T arr[], int n, int i) {
-    int largest = i;       // Initialize largest as root
-    int left = 2 * i + 1;  // Left child index (0-based)
-    int right = 2 * i + 2; // Right child index (0-based)
+/**
+ * MAX HEAPIFY
+ *
+ * Restores the Max Heap property for the subtree
+ * rooted at index i.
+ */
+template <typename T>
+void maxHeapify(T arr[], int n, int i)
+{
+    int largest = i;
 
-    // Check if left child is larger than root
-    if (left < n && arr[left] > arr[largest]) {
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && arr[left] > arr[largest])
         largest = left;
-    }
 
-    // Check if right child is larger than the current largest
-    if (right < n && arr[right] > arr[largest]) {
+    if (right < n && arr[right] > arr[largest])
         largest = right;
-    }
 
-    // If largest is not root, swap and continue heapifying the affected subtree
-    if (largest != i) {
-        swap_elements(arr[i], arr[largest]);
-        max_heapify(arr, n, largest);
-    }
-}
+    // If a child is larger, move it up and continue.
+    if (largest != i)
+    {
+        swapValues(arr[i], arr[largest]);
 
-// Builds a max-heap from an unsorted array
-template <class T>
-void build_max_heap(T arr[], int n) {
-    // Start from the last non-leaf node and move up to the root
-    for (int i = (n / 2) - 1; i >= 0; i--) {
-        max_heapify(arr, n, i);
+        maxHeapify(arr, n, largest);
     }
 }
 
-// Main Heap Sort Function
-template <class T>
-void heapSort(T arr[], int n) {
-    // 1. Build the max heap
-    build_max_heap(arr, n);
-
-    // 2. Extract elements one by one from the heap
-    for (int i = n - 1; i > 0; i--) {
-        // Move current root (maximum element) to the end of the array
-        swap_elements(arr, arr[i]);
-
-        // Call max_heapify on the reduced heap to restore order
-        max_heapify(arr, i, 0);
+/**
+ * BUILD MAX HEAP
+ *
+ * Leaf nodes are already valid heaps,
+ * so we start from the last non-leaf node.
+ */
+template <typename T>
+void buildMaxHeap(T arr[], int n)
+{
+    for (int i = n / 2 - 1; i >= 0; i--)
+    {
+        maxHeapify(arr, n, i);
     }
 }
 
-int main() {
-    int arr[] = {12, 11, 13, 5, 6, 7};
+/**
+ * HEAP SORT
+ */
+template <typename T>
+void heapSort(T arr[], int n)
+{
+    // Step 1: Build a Max Heap.
+    buildMaxHeap(arr, n);
+
+    for (int i = n - 1; i > 0; i--)
+    {
+        // Maximum element is currently at the root.
+        swapValues(arr[0], arr[i]);
+
+        // The last element is now in its final position.
+        // Heapify only the remaining heap.
+        maxHeapify(arr, i, 0);
+    }
+}
+
+// =========================== MAIN FUNCTION ===========================
+
+int main()
+{
+    int arr[] = { 12, 11, 13, 5, 6, 7 };
     int n = sizeof(arr) / sizeof(arr[0]);
 
     cout << "Original array: ";
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
         cout << arr[i] << " ";
-    }
-    cout << endl;
+
+    cout << "\n";
 
     heapSort(arr, n);
 
     cout << "Sorted array: ";
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
         cout << arr[i] << " ";
-    }
-    cout << endl;
+
+    cout << "\n";
 
     return 0;
 }

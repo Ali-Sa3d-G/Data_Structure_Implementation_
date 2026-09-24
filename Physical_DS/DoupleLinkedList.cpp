@@ -1,81 +1,120 @@
-﻿#include<iostream>
+﻿#include <iostream>
+
 using namespace std;
 
 /**
  * ============================================================================
- * DOUBLY LINKED LIST - COMPLETE LEARNING GUIDE
+ *                    DOUBLY LINKED LIST - LEARNING GUIDE
  * ============================================================================
  *
  * A doubly linked list is a linear data structure where each node contains:
- *   1. Data (the actual value)
+ *
+ *   1. Data
  *   2. A pointer to the NEXT node
  *   3. A pointer to the PREVIOUS node
  *
- * Advantages over singly linked list:
- *   - Can traverse in both directions (forward AND backward)
- *   - Easier deletion operations (don't need to track previous node)
+ * Visualization:
+ *
+ *   head
+ *    |
+ *    v
+ *   [NULL | 10 | *] <-> [* | 20 | *] <-> [* | 30 | NULL]
+ *                                           ^
+ *                                           |
+ *                                          tail
+ *
+ * Unlike a singly linked list, we can move in both directions.
+ *
+ * Advantages:
+ *   - Forward and backward traversal
+ *   - Easier deletion when the node is already known
+ *   - Fast insertion at the beginning and end when head/tail exist
  *
  * Disadvantages:
- *   - Uses more memory (extra pointer per node)
- *   - Slightly more complex insertion/deletion logic
+ *   - Uses extra memory for the prev pointer
+ *   - Pointer updates are more complicated
+ *
+ * Main Operations:
+ *   - Insert at beginning
+ *   - Insert at end
+ *   - Insert after a value
+ *   - Insert at position
+ *   - Delete from beginning
+ *   - Delete from end
+ *   - Delete at position
+ *   - Search
+ *
+ * Time Complexity:
+ *   Insert at beginning : O(1)
+ *   Insert at end       : O(1)
+ *   Search              : O(n)
+ *   Insert/Delete at position: O(n)
+ *
+ * Space Complexity: O(n)
  *
  * ============================================================================
  */
 
  // =========================== NODE CLASS ===========================
+
  /**
-  * A Node represents a single element in the linked list.
-  * Each node is a building block that connects to its neighbors.
+  * A Node represents one element in the doubly linked list.
   *
-  * Visual representation:
-  *   [ PREV | DATA | NEXT ]
-  *      ^      ^       ^
-  *      |      |       |
-  *   pointer to  |   pointer to
-  *   previous    |   next node
-  *           actual data
+  * Visualization:
+  *
+  *        [ PREV | DATA | NEXT ]
+  *            |      |      |
+  *            |      |      +----> next node
+  *            |      +-----------> stored value
+  *            +------------------> previous node
   */
 template <typename T>
-class Node {
+class Node
+{
 public:
-    T data;          // The actual value stored in this node
-    Node* next;      // Pointer to the next node (or NULL if last)
-    Node* prev;      // Pointer to the previous node (or NULL if first)
+    T data;
+    Node* next;
+    Node* prev;
 
-    // Constructor: creates a node with given data
-    Node(T value) {
+    // Creates a node with no neighbors yet.
+    Node(T value)
+    {
         data = value;
-        next = NULL;  // Initially, no next node
-        prev = NULL;  // Initially, no previous node
+        next = NULL;
+        prev = NULL;
     }
 };
 
-// =========================== LINKED LIST CLASS ===========================
+// =========================== DOUBLY LINKED LIST CLASS ===========================
+
 /**
- * The LinkedList class manages a collection of nodes.
- * It keeps track of the HEAD (first node) and TAIL (last node).
+ * The LinkedList class manages all nodes.
  *
- * Visual representation of a list with three nodes:
+ * head -> first node
+ * tail -> last node
  *
- *   head --> [ NULL | 10 | * ] --> [ * | 20 | * ] --> [ * | 30 | NULL ] <-- tail
- *                  ^                    ^                    ^
- *                prev points          prev points          prev points
- *                to NULL              to previous          to previous
+ * For a normal doubly linked list:
+ *
+ *   head->prev == NULL
+ *   tail->next == NULL
  */
 template <typename T>
-class LinkedList {
+class LinkedList
+{
 private:
-    Node<T>* head;   // Points to the FIRST node in the list
-    Node<T>* tail;   // Points to the LAST node in the list
-    int nodeCount;   // Tracks how many nodes are in the list
+    Node<T>* head;
+    Node<T>* tail;
+    int nodeCount;
 
 public:
+
     // ==================== CONSTRUCTOR ====================
+
     /**
-     * Initializes an empty linked list.
-     * No nodes exist yet.
+     * Creates an empty linked list.
      */
-    LinkedList() {
+    LinkedList()
+    {
         head = NULL;
         tail = NULL;
         nodeCount = 0;
@@ -83,18 +122,13 @@ public:
 
     // ==================== HELPER METHODS ====================
 
-    /**
-     * Checks if the list is empty.
-     * Returns true if no nodes exist, false otherwise.
-     */
-    bool isEmpty() const {
+    bool isEmpty() const
+    {
         return nodeCount == 0;
     }
 
-    /**
-     * Returns the number of nodes in the list.
-     */
-    int getSize() const {
+    int getSize() const
+    {
         return nodeCount;
     }
 
@@ -102,246 +136,271 @@ public:
 
     /**
      * INSERT AT BEGINNING
-     * Adds a new node at the START of the list.
      *
-     * Step-by-step for inserting 5 at beginning:
+     * Example:
      *
-     * Before: head --> [10] <-> [20] <-> [30] <-- tail
+     * Before:
+     *   head -> [10] <-> [20] <-> [30] <- tail
      *
-     * Step 1: Create new node [5]
-     * Step 2: Point new node's next to current head (10)
-     * Step 3: Point current head's prev to new node
-     * Step 4: Update head to point to new node
+     * Insert 5:
      *
-     * After:  head --> [5] <-> [10] <-> [20] <-> [30] <-- tail
+     * Step 1: Create [5]
+     * Step 2: Make 5->next point to old head
+     * Step 3: Make old head->prev point to 5
+     * Step 4: Move head to 5
+     *
+     * After:
+     *   head -> [5] <-> [10] <-> [20] <-> [30] <- tail
+     *
+     * Time Complexity: O(1)
      */
-    void insertAtBeginning(T data) {
-        // Step 1: Create the new node
+    void insertAtBeginning(T data)
+    {
         Node<T>* newNode = new Node<T>(data);
-        nodeCount++;
 
-        // Special case: List was empty
-        if (head == NULL) {
-            head = newNode;
-            tail = newNode;
+        if (isEmpty())
+        {
+            // In an empty list, the new node is both head and tail.
+            head = tail = newNode;
         }
-        else {
-            // Step 2: Connect new node to current head
+        else
+        {
             newNode->next = head;
-
-            // Step 3: Connect current head back to new node
             head->prev = newNode;
 
-            // Step 4: Update head to be the new node
             head = newNode;
         }
+
+        nodeCount++;
     }
 
     /**
      * INSERT AT END
-     * Adds a new node at the END of the list.
      *
-     * Step-by-step for inserting 40 at end:
+     * Because we keep a tail pointer, we don't need to traverse the list.
      *
-     * Before: head --> [10] <-> [20] <-> [30] <-- tail
+     * Before:
      *
-     * Step 1: Create new node [40]
-     * Step 2: Point current tail's next to new node
-     * Step 3: Point new node's prev to current tail
-     * Step 4: Update tail to point to new node
+     *   head -> [10] <-> [20] <-> [30] <- tail
      *
-     * After:  head --> [10] <-> [20] <-> [30] <-> [40] <-- tail
+     * Insert 40:
+     *
+     *   head -> [10] <-> [20] <-> [30] <-> [40] <- tail
+     *
+     * Time Complexity: O(1)
      */
-    void insertAtEnd(T data) {
-        // Step 1: Create the new node
+    void insertAtEnd(T data)
+    {
         Node<T>* newNode = new Node<T>(data);
-        nodeCount++;
 
-        // Special case: List was empty
-        if (head == NULL) {
-            head = newNode;
-            tail = newNode;
+        if (isEmpty())
+        {
+            head = tail = newNode;
         }
-        else {
-            // Step 2: Connect current tail to new node
+        else
+        {
+            // Connect the old tail to the new node.
             tail->next = newNode;
-
-            // Step 3: Connect new node back to current tail
             newNode->prev = tail;
 
-            // Step 4: Update tail to be the new node
+            // New node becomes the tail.
             tail = newNode;
         }
+
+        nodeCount++;
     }
 
     /**
      * INSERT AFTER A SPECIFIC VALUE
-     * Finds a node with 'afterValue' and inserts a new node right after it.
      *
-     * Example: Insert 25 after 20
+     * Example:
      *
-     * Before: [10] <-> [20] <-> [30]
-     *                      |
-     *                      v
-     * Step 1: Find node with value 20
-     * Step 2: Create new node [25]
-     * Step 3: Connect 25's next to 20's next (which is 30)
-     * Step 4: Connect 25's prev to 20
-     * Step 5: Connect 30's prev to 25
-     * Step 6: Connect 20's next to 25
+     * Before:
+     *   [10] <-> [20] <-> [30]
      *
-     * After:  [10] <-> [20] <-> [25] <-> [30]
+     * Insert 25 after 20:
+     *
+     *   [10] <-> [20] <-> [25] <-> [30]
+     *
+     * The new node must be connected in BOTH directions.
      */
-    void insertAfter(T data, T afterValue) {
-        // Step 1: Find the node containing 'afterValue'
+    void insertAfter(T data, T afterValue)
+    {
         Node<T>* currentNode = head;
-        while (currentNode != NULL && currentNode->data != afterValue) {
+
+        // Find the node containing afterValue.
+        while (currentNode != NULL && currentNode->data != afterValue)
+        {
             currentNode = currentNode->next;
         }
 
-        // If we found the node
-        if (currentNode != NULL) {
-            // Step 2: Create the new node
-            Node<T>* newNode = new Node<T>(data);
+        if (currentNode == NULL)
+            return;
 
-            // Step 3: Connect new node to the next node
-            newNode->next = currentNode->next;
+        Node<T>* newNode = new Node<T>(data);
 
-            // Step 4: Connect new node back to current node
-            newNode->prev = currentNode;
+        // Connect new node to its two neighbors.
+        newNode->next = currentNode->next;
+        newNode->prev = currentNode;
 
-            // Step 5: If there is a next node, connect it back to new node
-            if (currentNode->next != NULL) {
-                currentNode->next->prev = newNode;
-            }
-            else {
-                // If we're inserting at the end, update tail
-                tail = newNode;
-            }
-
-            // Step 6: Connect current node to new node
-            currentNode->next = newNode;
-            nodeCount++;
+        // Connect the next node back to the new node.
+        if (currentNode->next != NULL)
+        {
+            currentNode->next->prev = newNode;
         }
-        else {
-            cout << "Warning: Value " << afterValue << " not found in list!" << endl;
+        else
+        {
+            // We inserted after the old tail.
+            tail = newNode;
         }
+
+        // Connect current node to the new node.
+        currentNode->next = newNode;
+
+        nodeCount++;
     }
 
     /**
-     * INSERT AT SPECIFIC POSITION
-     * Inserts a node at the given index (0-based).
+     * INSERT AT POSITION
      *
-     * Positions:
-     *   pos = 0 --> insert at beginning
-     *   pos = size --> insert at end
-     *   other --> insert somewhere in the middle
+     * Position 0 -> beginning
+     * Position size -> end
+     * Anything between them -> middle
      */
-    void insertAtPosition(T data, int position) {
-        // Validate position
-        if (position < 0 || position > nodeCount) {
-            cout << "Error: Invalid position! Valid range: 0 to " << nodeCount << endl;
+    void insertAtPosition(T data, int position)
+    {
+        if (position < 0 || position > nodeCount)
+        {
+            cout << "Invalid position." << endl;
             return;
         }
 
-        // Insert at beginning
-        if (position == 0) {
+        if (position == 0)
+        {
             insertAtBeginning(data);
+            return;
         }
-        // Insert at end
-        else if (position == nodeCount) {
+
+        if (position == nodeCount)
+        {
             insertAtEnd(data);
+            return;
         }
-        // Insert in the middle
-        else {
-            // Traverse to the node BEFORE the insertion point
-            Node<T>* currentNode = head;
-            for (int i = 0; i < position - 1; i++) {
-                currentNode = currentNode->next;
-            }
 
-            // Create new node
-            Node<T>* newNode = new Node<T>(data);
+        Node<T>* currentNode = head;
 
-            // Connect new node to its neighbors
-            newNode->next = currentNode->next;
-            newNode->prev = currentNode;
-
-            // Connect neighbors to new node
-            currentNode->next->prev = newNode;
-            currentNode->next = newNode;
-
-            nodeCount++;
+        // Move to the node currently at this position.
+        for (int i = 0; i < position; i++)
+        {
+            currentNode = currentNode->next;
         }
+
+        Node<T>* newNode = new Node<T>(data);
+
+        /*
+         * Insert between currentNode->prev and currentNode.
+         *
+         *   A <-> currentNode
+         *
+         * becomes
+         *
+         *   A <-> newNode <-> currentNode
+         */
+        newNode->prev = currentNode->prev;
+        newNode->next = currentNode;
+
+        currentNode->prev->next = newNode;
+        currentNode->prev = newNode;
+
+        nodeCount++;
     }
 
     // ==================== DISPLAY OPERATIONS ====================
 
     /**
      * DISPLAY FORWARD
-     * Prints the list from head to tail.
      *
-     * Example output: 10 20 30 40
+     * Traverses from head to tail using next pointers.
      */
-    void displayForward() const {
-        if (isEmpty()) {
-            cout << "List is empty" << endl;
+    void displayForward() const
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
             return;
         }
 
         Node<T>* currentNode = head;
-        cout << "Forward traversal (head -> tail): ";
-        while (currentNode != NULL) {
+
+        cout << "Forward: ";
+
+        while (currentNode != NULL)
+        {
             cout << currentNode->data;
-            if (currentNode->next != NULL) cout << " <-> ";
+
+            if (currentNode->next != NULL)
+                cout << " <-> ";
+
             currentNode = currentNode->next;
         }
+
         cout << endl;
     }
 
     /**
      * DISPLAY REVERSE
-     * Prints the list from tail to head.
      *
-     * Example output: 40 30 20 10
+     * Traverses from tail to head using prev pointers.
      */
-    void displayReverse() const {
-        if (isEmpty()) {
-            cout << "List is empty" << endl;
+    void displayReverse() const
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
             return;
         }
 
         Node<T>* currentNode = tail;
-        cout << "Reverse traversal (tail -> head): ";
-        while (currentNode != NULL) {
+
+        cout << "Reverse: ";
+
+        while (currentNode != NULL)
+        {
             cout << currentNode->data;
-            if (currentNode->prev != NULL) cout << " <-> ";
+
+            if (currentNode->prev != NULL)
+                cout << " <-> ";
+
             currentNode = currentNode->prev;
         }
+
         cout << endl;
     }
 
     // ==================== SEARCH OPERATION ====================
 
     /**
-     * SEARCH FOR A VALUE
-     * Finds the position (index) of a given value.
-     * Returns the position if found, -1 if not found.
+     * SEARCH
+     *
+     * Returns the index of the first occurrence.
+     * Returns -1 if the value is not found.
+     *
+     * Time Complexity: O(n)
      */
-    int search(T key) {
+    int search(T key) const
+    {
         Node<T>* currentNode = head;
         int position = 0;
 
-        while (currentNode != NULL) {
-            if (currentNode->data == key) {
-                cout << "[FOUND] " << key << " at position " << position << endl;
+        while (currentNode != NULL)
+        {
+            if (currentNode->data == key)
                 return position;
-            }
+
             currentNode = currentNode->next;
             position++;
         }
 
-        cout << "[NOT FOUND] Value " << key << " not in list" << endl;
         return -1;
     }
 
@@ -349,210 +408,207 @@ public:
 
     /**
      * DELETE FROM BEGINNING
-     * Removes the first node and updates head to point to the next node.
      *
-     * Step-by-step:
-     * Before: head --> [10] <-> [20] <-> [30] <-- tail
+     * Before:
      *
-     * Step 1: Store pointer to head node (to delete it later)
-     * Step 2: Move head to the next node (20)
-     * Step 3: Set new head's prev to NULL
-     * Step 4: Delete the old head node
+     *   head -> [10] <-> [20] <-> [30] <- tail
      *
-     * After:  head --> [20] <-> [30] <-- tail
+     * Steps:
+     *   1. Save the old head.
+     *   2. Move head to the next node.
+     *   3. Remove the new head's prev link.
+     *   4. Delete the old node.
+     *
+     * Time Complexity: O(1)
      */
-    void deleteFromBeginning() {
-        if (isEmpty()) {
-            cout << "Error: Cannot delete - list is empty!" << endl;
+    void deleteFromBeginning()
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
             return;
         }
 
         Node<T>* nodeToDelete = head;
 
-        // Special case: Only one node in list
-        if (head == tail) {
-            head = NULL;
-            tail = NULL;
+        if (head == tail)
+        {
+            // The list has only one node.
+            head = tail = NULL;
         }
-        else {
-            // Move head to next node
+        else
+        {
             head = head->next;
-            // Disconnect the new head from the old node
+
+            // The new head has no previous node.
             head->prev = NULL;
         }
 
-        // Free the memory
         delete nodeToDelete;
         nodeCount--;
     }
 
     /**
      * DELETE FROM END
-     * Removes the last node and updates tail to point to the previous node.
+     *
+     * Because we have a tail pointer,
+     * we can delete the last node directly.
+     *
+     * Time Complexity: O(1)
      */
-    void deleteFromEnd() {
-        if (isEmpty()) {
-            cout << "Error: Cannot delete - list is empty!" << endl;
+    void deleteFromEnd()
+    {
+        if (isEmpty())
+        {
+            cout << "List is empty." << endl;
             return;
         }
 
         Node<T>* nodeToDelete = tail;
 
-        // Special case: Only one node in list
-        if (head == tail) {
-            head = NULL;
-            tail = NULL;
+        if (head == tail)
+        {
+            head = tail = NULL;
         }
-        else {
-            // Move tail to previous node
+        else
+        {
             tail = tail->prev;
-            // Disconnect the new tail from the old node
+
+            // The new tail has no next node.
             tail->next = NULL;
         }
 
-        // Free the memory
         delete nodeToDelete;
         nodeCount--;
     }
 
     /**
-     * DELETE AT SPECIFIC POSITION
-     * Removes the node at the given index (0-based).
+     * DELETE AT POSITION
+     *
+     * Example:
+     *
+     *   [10] <-> [20] <-> [30] <-> [40]
+     *                 ^
+     *              delete
+     *
+     * Connect:
+     *
+     *   [10] <-> [30] <-> [40]
+     *
+     * Both directions must be updated.
      */
-    void deleteAtPosition(int position) {
-        // Validate position
-        if (position < 0 || position >= nodeCount) {
-            cout << "Error: Invalid position! Valid range: 0 to " << nodeCount - 1 << endl;
+    void deleteAtPosition(int position)
+    {
+        if (position < 0 || position >= nodeCount)
+        {
+            cout << "Invalid position." << endl;
             return;
         }
 
-        // Delete from beginning
-        if (position == 0) {
+        if (position == 0)
+        {
             deleteFromBeginning();
+            return;
         }
-        // Delete from end
-        else if (position == nodeCount - 1) {
+
+        if (position == nodeCount - 1)
+        {
             deleteFromEnd();
+            return;
         }
-        // Delete from middle
-        else {
-            // Traverse to the node BEFORE the one to delete
-            Node<T>* currentNode = head;
-            for (int i = 0; i < position - 1; i++) {
-                currentNode = currentNode->next;
-            }
 
-            // Node to delete is the next one
-            Node<T>* nodeToDelete = currentNode->next;
+        Node<T>* currentNode = head;
 
-            // Connect the node before to the node after
-            currentNode->next = nodeToDelete->next;
-            nodeToDelete->next->prev = currentNode;
-
-            // Free the memory
-            delete nodeToDelete;
-            nodeCount--;
+        for (int i = 0; i < position; i++)
+        {
+            currentNode = currentNode->next;
         }
+
+        // Connect the two neighbors together.
+        currentNode->prev->next = currentNode->next;
+        currentNode->next->prev = currentNode->prev;
+
+        delete currentNode;
+        nodeCount--;
     }
 
     /**
-     * DELETE THE ENTIRE LIST
-     * Removes all nodes and resets the list.
+     * DELETE ALL NODES
+     *
+     * Deletes every node and returns the list to
+     * its empty state.
+     *
+     * Time Complexity: O(n)
      */
-    void deleteAllNodes() {
-        while (head != NULL) {
+    void deleteAllNodes()
+    {
+        while (head != NULL)
+        {
             Node<T>* temp = head;
             head = head->next;
             delete temp;
         }
+
         head = NULL;
         tail = NULL;
         nodeCount = 0;
-        cout << "List has been completely cleared." << endl;
     }
 
     // ==================== DESTRUCTOR ====================
+
     /**
-     * Destructor automatically cleans up memory when the list goes out of scope.
+     * Automatically frees all nodes when the list is destroyed.
      */
-    ~LinkedList() {
+    ~LinkedList()
+    {
         deleteAllNodes();
     }
 };
 
-// =========================== MAIN FUNCTION - TESTING ===========================
-int main() {
-    cout << "\n+================================================+" << endl;
-    cout << "|     DOUBLY LINKED LIST - DEMONSTRATION PROGRAM    |" << endl;
-    cout << "+================================================+\n" << endl;
+// =========================== MAIN FUNCTION - DEMONSTRATION ===========================
 
-    LinkedList<int> myList;
+int main()
+{
+    LinkedList<int> list;
 
-    // ===== TEST 1: INSERTION OPERATIONS =====
-    cout << "[TEST 1] INSERTION OPERATIONS" << endl;
-    cout << "----------------------------------------" << endl;
+    // ==================== INSERTION ====================
 
-    cout << "\n1. Inserting at end: 10, 20, 30" << endl;
-    myList.insertAtEnd(10);
-    myList.insertAtEnd(20);
-    myList.insertAtEnd(30);
-    myList.displayForward();
+    cout << "--- INSERTION OPERATIONS ---" << endl;
 
-    cout << "\n2. Inserting at beginning: 5" << endl;
-    myList.insertAtBeginning(5);
-    myList.displayForward();
+    list.insertAtEnd(10);
+    list.insertAtEnd(20);
+    list.insertAtEnd(30);
 
-    cout << "\n3. Inserting at position 2 (0-based): 15" << endl;
-    myList.insertAtPosition(15, 2);
-    myList.displayForward();
+    list.displayForward();
 
-    cout << "\n4. Inserting after value 20: 25" << endl;
-    myList.insertAfter(25, 20);
-    myList.displayForward();
+    list.insertAtBeginning(5);
+    list.insertAtPosition(15, 2);
+    list.insertAfter(25, 20);
 
-    cout << "\n5. Display in reverse order:" << endl;
-    myList.displayReverse();
+    list.displayForward();
+    list.displayReverse();
 
-    // ===== TEST 2: SEARCH OPERATIONS =====
-    cout << "\n[TEST 2] SEARCH OPERATIONS" << endl;
-    cout << "----------------------------------------" << endl;
-    myList.search(20);    // Should find
-    myList.search(100);   // Should not find
+    // ==================== SEARCH ====================
 
-    // ===== TEST 3: DELETION OPERATIONS =====
-    cout << "\n[TEST 3] DELETION OPERATIONS" << endl;
-    cout << "----------------------------------------" << endl;
+    cout << "\n--- SEARCH ---" << endl;
 
-    cout << "\nCurrent list: ";
-    myList.displayForward();
+    cout << "Index of 20: " << list.search(20) << endl;
+    cout << "Index of 100: " << list.search(100) << endl;
 
-    cout << "\n6. Deleting from beginning:" << endl;
-    myList.deleteFromBeginning();
-    myList.displayForward();
+    // ==================== DELETION ====================
 
-    cout << "\n7. Deleting from end:" << endl;
-    myList.deleteFromEnd();
-    myList.displayForward();
+    cout << "\n--- DELETION OPERATIONS ---" << endl;
 
-    cout << "\n8. Deleting at position 1:" << endl;
-    myList.deleteAtPosition(1);
-    myList.displayForward();
+    list.deleteFromBeginning();
+    list.displayForward();
 
-    // ===== FINAL STATISTICS =====
-    cout << "\n[FINAL LIST STATISTICS]" << endl;
-    cout << "----------------------------------------" << endl;
-    cout << "Final list contents: ";
-    myList.displayForward();
-    cout << "Number of nodes: " << myList.getSize() << endl;
+    list.deleteFromEnd();
+    list.displayForward();
 
-    // Test empty list operations
-    cout << "\n[TESTING EDGE CASES]" << endl;
-    cout << "----------------------------------------" << endl;
-    cout << "Testing deletion from empty list (should show error):" << endl;
-    LinkedList<int> emptyList;
-    emptyList.deleteFromBeginning();
+    list.deleteAtPosition(1);
+    list.displayForward();
 
-    cout << "\nProgram completed successfully!" << endl;
+    cout << "\nList size: " << list.getSize() << endl;
 
     return 0;
 }

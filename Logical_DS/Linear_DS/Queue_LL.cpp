@@ -2,213 +2,327 @@
 
 using namespace std;
 
-class Node{
-    public:
-        int data;
-        Node* next;
+/**
+ * ============================================================================
+ *                         QUEUE - LEARNING GUIDE
+ * ============================================================================
+ *
+ * A Queue follows the FIFO rule:
+ *
+ *       First In -> First Out
+ *
+ * Example:
+ *
+ *       enqueue(10)
+ *       enqueue(20)
+ *       enqueue(30)
+ *
+ *       FRONT                          REAR
+ *         |                              |
+ *         v                              v
+ *       [10] -> [20] -> [30] -> NULL
+ *
+ * 10 is the first element to leave the queue.
+ *
+ * Main Operations:
+ *   - enqueue -> add at rear
+ *   - dequeue -> remove from front
+ *   - getFront -> see first element
+ *   - getRear -> see last element
+ *
+ * By keeping both front and rear pointers,
+ * enqueue and dequeue can both be O(1).
+ *
+ * Time Complexity:
+ *   Enqueue     : O(1)
+ *   Dequeue     : O(1)
+ *   Front / Rear: O(1)
+ *   Search      : O(n)
+ *
+ * Space Complexity: O(n)
+ *
+ * ============================================================================
+ */
 
-        // Constructor to initialize the node
-        Node(int value){
-            data = value;
-            next = nullptr;
-        }
+ // =========================== NODE CLASS ===========================
+
+class Node
+{
+public:
+    int data;
+    Node* next;
+
+    Node(int value)
+    {
+        data = value;
+        next = nullptr;
+    }
 };
 
-class Queue{
-    private:
-        Node* front;
-        Node* rear;
+// =========================== QUEUE CLASS ===========================
 
-    public:
-        // Constructor to initialize the queue
-        Queue(){
-            front = nullptr;
+class Queue
+{
+private:
+    Node* front;
+    Node* rear;
+
+public:
+
+    // ==================== CONSTRUCTOR ====================
+
+    /**
+     * Creates an empty queue.
+     *
+     * Both front and rear are NULL.
+     */
+    Queue()
+    {
+        front = nullptr;
+        rear = nullptr;
+    }
+
+    // ==================== HELPER ====================
+
+    bool isEmpty() const
+    {
+        return front == nullptr;
+    }
+
+    // ==================== ENQUEUE ====================
+
+    /**
+     * ENQUEUE
+     *
+     * Adds an element at the rear.
+     *
+     * Before:
+     *
+     *   front -> [10] -> [20] -> NULL <- rear
+     *
+     * enqueue(30)
+     *
+     * After:
+     *
+     *   front -> [10] -> [20] -> [30] -> NULL <- rear
+     *
+     * Time Complexity: O(1)
+     */
+    void enqueue(int value)
+    {
+        Node* newNode = new Node(value);
+
+        if (isEmpty())
+        {
+            // First node is both front and rear.
+            front = rear = newNode;
+            return;
+        }
+
+        // Add the new node after the current rear.
+        rear->next = newNode;
+
+        // Move rear to the new node.
+        rear = newNode;
+    }
+
+    // ==================== DEQUEUE ====================
+
+    /**
+     * DEQUEUE
+     *
+     * Removes the element at the front.
+     *
+     * Before:
+     *
+     *   front
+     *     |
+     *     v
+     *   [10] -> [20] -> [30]
+     *
+     * After:
+     *
+     *   front
+     *     |
+     *     v
+     *   [20] -> [30]
+     *
+     * Time Complexity: O(1)
+     */
+    int dequeue()
+    {
+        if (isEmpty())
+        {
+            cout << "Queue underflow." << endl;
+            return -1;
+        }
+
+        Node* nodeToDelete = front;
+        int value = front->data;
+
+        front = front->next;
+
+        // If the queue became empty, rear must also be NULL.
+        if (front == nullptr)
+        {
             rear = nullptr;
         }
 
-        // Function to check if the queue is empty
-        bool isEmpty(){
-            return front == nullptr;
+        delete nodeToDelete;
+
+        return value;
+    }
+
+    // ==================== FRONT / REAR ====================
+
+    /**
+     * Returns the first element without removing it.
+     */
+    int getFront() const
+    {
+        if (isEmpty())
+        {
+            cout << "Queue is empty." << endl;
+            return -1;
         }
 
-        // Function to enqueue an element into the queue
-        void enqueue(int value){
-            Node* new_node = new Node(value);
-            if (isEmpty()){
-                front = rear = new_node;
-                return;
-            }
-            rear->next = new_node;
-            rear = new_node;
+        return front->data;
+    }
+
+    /**
+     * Returns the last element without removing it.
+     */
+    int getRear() const
+    {
+        if (isEmpty())
+        {
+            cout << "Queue is empty." << endl;
+            return -1;
         }
 
-        // Function to dequeue an element from the queue and return the dequeued value
-        int dequeue(){
-            if(isEmpty()){
-                cout<<"Queue underflow. Cannot dequeue from an empty queue."<<endl;
-                return -1; // Return -1 to indicate queue is empty
-            }
-            else if (front == rear){
-                int dequeued_value = front->data;
-                delete front;
-                front = rear = nullptr;
-                return dequeued_value;
-            }
-            else{
-                Node* delptr = front;
-                int dequeued_value = delptr->data;
-                front = front->next;
-                delete delptr;
-                return dequeued_value;
-            }
+        return rear->data;
+    }
 
+    // ==================== SEARCH ====================
+
+    int search(int key) const
+    {
+        Node* current = front;
+        int index = 0;
+
+        while (current != nullptr)
+        {
+            if (current->data == key)
+                return index;
+
+            current = current->next;
+            index++;
         }
 
-        // Function to peek at the front element of the queue without removing it
-        int getFront(){
-            if(isEmpty()){
-                cout<<"Queue is empty. Cannot peek."<<endl;
-                return -1; // Return -1 to indicate queue is empty
-            }
-            return front->data;
+        return -1;
+    }
+
+    bool isFound(int key) const
+    {
+        return search(key) != -1;
+    }
+
+    // ==================== COUNT ====================
+
+    int count() const
+    {
+        int numberOfElements = 0;
+        Node* current = front;
+
+        while (current != nullptr)
+        {
+            numberOfElements++;
+            current = current->next;
         }
 
-        // Function to peek at the rear element of the queue without removing it
-        int getRear(){
-            if(isEmpty()){
-                cout<<"Queue is empty. Cannot peek."<<endl;
-                return -1; // Return -1 to indicate queue is empty
-            }
-            return rear->data;
+        return numberOfElements;
+    }
+
+    // ==================== DISPLAY ====================
+
+    void display() const
+    {
+        Node* current = front;
+
+        cout << "FRONT -> ";
+
+        while (current != nullptr)
+        {
+            cout << current->data << " ";
+            current = current->next;
         }
 
-        // Function to display the elements of the queue
-        void display(){
-            Node* temp = front;
-            cout<<"The elements of the queue are: ";
-            while(temp != nullptr){
-                cout<<temp->data<<" ";
-                temp = temp->next;
-            }
-            cout<<endl;
+        cout << "<- REAR" << endl;
+    }
+
+    // ==================== CLEAR ====================
+
+    /**
+     * Removes all elements from the queue.
+     */
+    void clear()
+    {
+        while (!isEmpty())
+        {
+            dequeue();
         }
+    }
 
-        // Function to count the number of elements in the queue
-        int count(){
-            Node* temp = front;
-            int count = 0;
-            while(temp != nullptr){
-                count++;
-                temp = temp->next;
-            }
-            return count;
-        }
+    // ==================== DESTRUCTOR ====================
 
-        // Function to search for an element in the queue
-        bool isFound(int key){
-            Node* temp = front;
-            while(temp != nullptr){
-                if(temp->data == key){
-                    return true;
-                }
-                temp = temp->next;
-            }
-            return false;
-        }
+    ~Queue()
+    {
+        clear();
+    }
+};
 
-        // Function to search for an element in the queue and return its index
-        int search(int key){
-            Node* temp = front;
-            int index = 0;
-            while(temp != nullptr){
-                if(temp->data == key){
-                    cout<<"Found "<<key<<" at index "<<index<<endl;
-                    return index;
-                }
-                temp = temp->next;
-                index++;
-            }
-            cout<<"Element not found"<<endl;
-            return -1; // Return -1 to indicate element not found
-        }
+// =========================== MAIN FUNCTION ===========================
 
-        // Function to clear the queue by dequeuing all elements
-        void clear(){
-            while(!isEmpty()){
-                dequeue();
-            }
-        }
-
-
-    };
-
-
-int main() {
+int main()
+{
     Queue queue;
 
-    // 1. Test isEmpty and Initial State
-    cout << "--- 1. Initial State Check ---" << endl;
-    cout << "Is queue empty? " << (queue.isEmpty() ? "Yes" : "No") << endl;
+    // ==================== ENQUEUE ====================
+
+    cout << "--- ENQUEUE ---" << endl;
+
+    queue.enqueue(10);
+    queue.enqueue(20);
+    queue.enqueue(30);
+
     queue.display();
-    cout << endl;
 
+    // ==================== FRONT / REAR ====================
 
-    // 2. Test Basic Enqueue Operations
-    cout << "--- 2. Testing Enqueue ---" << endl;
-    cout << "Enqueuing 10, then 20, then 30..." << endl;
-    queue.enqueue(10);  // Queue: 10
-    queue.enqueue(20);  // Queue: 10 20
-    queue.enqueue(30);  // Queue: 10 20 30
+    cout << "\nFront: " << queue.getFront() << endl;
+    cout << "Rear: " << queue.getRear() << endl;
+
+    // ==================== DEQUEUE ====================
+
+    cout << "\n--- DEQUEUE ---" << endl;
+
+    cout << "Dequeued: "
+        << queue.dequeue() << endl;
+
     queue.display();
-    cout << "Current Count: " << queue.count() << endl << endl;
 
+    // ==================== SEARCH ====================
 
-    // 3. Test Peek Operations
-    cout << "--- 3. Testing Peek Operations ---" << endl;
-    cout << "Front element: " << queue.getFront() << endl; // Should be 10
-    cout << "Rear element: " << queue.getRear() << endl;   // Should be 30
-    cout << endl;
+    cout << "\nIndex of 30: "
+        << queue.search(30) << endl;
 
+    cout << "Is 50 found? "
+        << (queue.isFound(50) ? "Yes" : "No") << endl;
 
-    // 4. Test Dequeue Operations
-    cout << "--- 4. Testing Dequeue ---" << endl;
-    cout << "Dequeuing an element..." << endl;
-    int dequeuedValue = queue.dequeue(); // Should dequeue 10
-    if (dequeuedValue != -1) {
-        cout << "Dequeued value: " << dequeuedValue << endl;
-        queue.display();
-        cout << "Current Count: " << queue.count() << endl;
-    }
-    cout << endl;
+    // ==================== COUNT ====================
 
-
-    // 5. Test Search & Index
-    cout << "--- 5. Testing Search & Findings ---" << endl;
-    int searchKey = 20;
-    cout << "Searching for " << searchKey << ":" << endl;
-    queue.search(searchKey); // Should print index 0 (after dequeuing 10)
-    searchKey = 40;
-    cout << "Searching for " << searchKey << ":" << endl;
-    queue.search(searchKey); // Should indicate element not found
-    cout << endl;
-
-
-    // 6. Test Dequeueing All Elements and Dequeue from Empty Queue
-    cout << "--- 6. Testing Dequeue from Empty Queue ---" << endl;
-    queue.dequeue(); // Dequeue 20
-    queue.dequeue(); // Dequeue 30
-    cout << "Dequeuing from an empty queue..." << endl;
-    queue.dequeue(); // Should indicate queue is empty
-    queue.display();
-    cout << "Current Count: " << queue.count() << endl; 
-
-    // 7. Test Clear Function
-    cout << "--- 7. Testing Clear Function ---" << endl;
-    queue.clear();
-    queue.display();
-    cout << "Current Count: " << queue.count() << endl; 
-    
+    cout << "\nNumber of elements: "
+        << queue.count() << endl;
 
     return 0;
-
 }

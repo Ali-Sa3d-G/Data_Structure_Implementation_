@@ -1,67 +1,107 @@
 #include <iostream>
 #include <vector>
-#include <algorithm>
 
 using namespace std;
 
-// A modified stable counting sort helper function used by radix sort 
-void counting_sort_for_radix(vector<int>& A, int place, int radix = 10) {
-    int n = A.size();
-    vector<int> B(n, 0);
-    vector<int> C(radix, 0);
+/**
+ * ============================================================================
+ *                         COUNTING SORT - LEARNING GUIDE
+ * ============================================================================
+ *
+ * Counting Sort does not compare elements.
+ *
+ * It counts how many times each value appears.
+ *
+ * Example:
+ *
+ *       Array:
+ *       [4  2  2  8  3  3  1]
+ *
+ *       Count table:
+ *
+ *       Value:  0 1 2 3 4 5 6 7 8
+ *       Count:  0 1 2 2 1 0 0 0 1
+ *
+ * Then rebuild the array using the counts:
+ *
+ *       [1 2 2 3 3 4 8]
+ *
+ * This implementation works with NON-NEGATIVE integers.
+ *
+ * Time Complexity: O(n + k)
+ * Space Complexity: O(k)
+ *
+ * k = maximum value
+ *
+ * ============================================================================
+ */
 
-    // Calculate count of elements based on the current digit
-    for (int i = 0; i < n; ++i) {
-        int digit = (A[i] / place) % radix;
-        C[digit]++;
+ /**
+  * COUNTING SORT
+  */
+void countingSort(int arr[], int n)
+{
+    if (n <= 0)
+        return;
+
+    int maxValue = arr[0];
+
+    // Find the maximum value.
+    for (int i = 1; i < n; i++)
+    {
+        if (arr[i] > maxValue)
+            maxValue = arr[i];
     }
 
-    // Cumulative sums
-    for (int i = 1; i < radix; ++i) {
-        C[i] += C[i - 1];
+    // Counting Sort uses the values as indexes.
+    vector<int> count(maxValue + 1, 0);
+
+    // Count each value.
+    for (int i = 0; i < n; i++)
+    {
+        if (arr[i] < 0)
+        {
+            cout << "Counting Sort expects non-negative integers.\n";
+            return;
+        }
+
+        count[arr[i]]++;
     }
 
-    // Build the output array stably backwards
-    for (int i = n - 1; i >= 0; --i) {
-        int digit = (A[i] / place) % radix;
-        B[C[digit] - 1] = A[i];
-        C[digit]--;
-    }
+    // Rebuild the array from the count table.
+    int index = 0;
 
-    // Copy the sorted elements back to the original array A
-    A = B;
+    for (int value = 0; value <= maxValue; value++)
+    {
+        while (count[value] > 0)
+        {
+            arr[index++] = value;
+            count[value]--;
+        }
+    }
 }
 
-// Main Radix Sort function
-void radix_sort(vector<int>& A) {
-    if (A.empty()) return;
+// =========================== MAIN FUNCTION ===========================
 
-    // Find the maximum number to know the max number of digits
-    int max_val = A[0];
-    for (int num : A) {
-        if (num > max_val) max_val = num;
-    }
+int main()
+{
+    int arr[] = { 4, 2, 2, 8, 3, 3, 1 };
+    int n = sizeof(arr) / sizeof(arr[0]);
 
-    // Apply stable counting sort for every digit position
-    // place goes from 1 (1s digit) to 10 (10s digit), 100, etc.
-    for (int place = 1; max_val / place > 0; place *= 10) {
-        counting_sort_for_radix(A, place);
-    }
-}
+    cout << "Original array: ";
 
-int main() {
-    // Example entries matching standard radix sort multi-digit lectures
-    vector<int> test_array = {329, 457, 657, 839, 436, 720, 355};
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
 
-    cout << "--- Radix Sort Test ---\n";
-    cout << "Original Array: ";
-    for (int num : test_array) cout << num << " ";
     cout << "\n";
 
-    radix_sort(test_array);
+    countingSort(arr, n);
 
-    cout << "Sorted Array:   ";
-    for (int num : test_array) cout << num << " ";
+    cout << "Sorted array: ";
+
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+
     cout << "\n";
 
     return 0;
